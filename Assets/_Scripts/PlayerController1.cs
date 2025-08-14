@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-//using Animancer;
-//using Animancer.FSM;
+using Animancer;
+using Animancer.FSM;
 using System;
 
 public class PlayerController : MonoBehaviour
@@ -41,40 +41,16 @@ public class PlayerController : MonoBehaviour
 
     [Header("Weapon/Hands Settings")]
     public GameObject hand;         
-    public GameObject handWithGun; 
-    private bool _isShooting = false;
-    private float _shootTimer = 0f;
+    public GameObject handwithItem1; 
+
 
 
     [Header("Animation Movement Settings disarmed ")]
-    // public AnimancerComponent animancer;
+    public AnimancerComponent animancer;
     public AnimationClip idleClip;
     public float idleTransitionDuration = 0.1f;
     public AnimationClip walkClip;
     public float walkTransitionDuration = 0.1f;
-    public AnimationClip punchClip;
-    public float punchTransitionDuration = 0.25f;
-
-    [Header("Animation Movement Settings handgun")]
-    // public AnimancerComponent animancerGun;
-    public AnimationClip idleGunClip;
-    public float idleGunTransitionDuration = 0.1f;
-    public AnimationClip walkGunClip;
-    public float walkGunTransitionDuration = 0.1f;
-    public AnimationClip GunShootClip;
-    public float shootTransitionDuration = 0.25f;
-    public AnimationClip GunAimingClip;
-    public float GunAimingTransitionDuration = 0.1f;
-    public AnimationClip GunAimingShootClip;
-    public float GunAimingShootTransitionDuration = 0.1f;
-
-    [Header("Check is")]
-    [NonSerialized] public bool _CheckAiming = false;
-    [NonSerialized] public bool _CheckShooting = false;
-    [NonSerialized] public bool _CheckPunching = false;
-
-
-
 
     #endregion
 
@@ -85,8 +61,7 @@ public class PlayerController : MonoBehaviour
         _ChController = GetComponent<CharacterController>();
         _jumpsLeft = _MaxJumps;
         _MyCamera = Camera.main.transform;
-        hand.SetActive(true);
-        handWithGun.SetActive(false);
+        hand.SetActive(false);
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
@@ -96,20 +71,12 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         if (_EnableMovement) Movement();
-        if (_EnableGravity) Gravity();
+        if (_EnableGravity) NormalGravity();
         if (_EnableJump) Jump();
-        if (_EnableCombat) Punch();
-        if (_EnableCombat) weaponSwitch();
-        HandleShootingTimer();
-
 
         HandleGrounding();
         Animate();
 
-
-        // if(_CheckShooting == true) Debug.Log("Shooting is " + _CheckShooting);
-        // if(_CheckPunching == true) Debug.Log("Punch is " + _CheckPunching);
-        // if(_CheckAiming == true) Debug.Log("Aiming is " + _CheckAiming);
     }
     #endregion
 
@@ -136,52 +103,8 @@ public class PlayerController : MonoBehaviour
         }
     }
     #endregion
-
-    #region Combat
-
-    void weaponSwitch()
-    {
-        if (Input.GetKeyDown(KeyCode.Alpha1))
-        {
-            hand.SetActive(true);
-            handWithGun.SetActive(false);
-            _isArmed = false;
-        }
-        else if (Input.GetKeyDown(KeyCode.Alpha2))
-        {
-            hand.SetActive(false);
-            handWithGun.SetActive(true);
-            _isArmed = true;
-        }
-    }
-
-    void HandleShootingTimer()
-    {
-        if (_isShooting)
-        {
-            _shootTimer -= Time.deltaTime;
-            if (_shootTimer <= 0f)
-            {
-                _isShooting = false;
-            }
-        }
-    }
-
-
-
-    void Punch()
-    {
-
-    }
-    void Shoot()
-    {
-        
-    }
-
-    #endregion
-
     #region Gravity
-    void Gravity()
+    void NormalGravity()
     {
         _verticalVelocity += _gravity * Time.deltaTime;
         _ChController.Move(Vector3.up * _verticalVelocity * Time.deltaTime);
@@ -221,7 +144,17 @@ public class PlayerController : MonoBehaviour
 
     void Animate()
     {
+        float HorizontalInput = Input.GetAxisRaw("Horizontal");
+        float VerticalInput = Input.GetAxisRaw("Vertical");
 
+        if(HorizontalInput != 0 || VerticalInput != 0)
+        {
+            animancer.Play(walkClip, walkTransitionDuration);
+        }
+        else
+        {
+            animancer.Play(idleClip, idleTransitionDuration);
+        }
     }
 
 
