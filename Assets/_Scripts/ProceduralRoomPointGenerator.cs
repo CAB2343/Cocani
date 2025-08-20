@@ -1,51 +1,69 @@
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class ProceduralRoomPointGenerator : MonoBehaviour
 {
-    [Header("Instanciação")]
     public Vector3 localOffset = Vector3.forward; 
     public Vector3 scale = Vector3.one;
-
-    [Header("Prefabs")]
     public List<GameObject> RoomPrefabs = new List<GameObject>();
 
-    private int roomIndex;
+    private ProceduralGeneratorManager generatorManager;
+
+    void Awake()
+    {
+
+        if (generatorManager == null)
+        {
+            generatorManager = FindObjectOfType<ProceduralGeneratorManager>();
+        }
+
+
+        if (generatorManager != null)
+        {
+            generatorManager.RegisterRoom();
+        }
+    }
 
     void Start()
     {
         if (RoomPrefabs.Count == 0) return;
+        if (!generatorManager.CanCreateRoom())
+            return;
 
-        roomIndex = Random.Range(0, RoomPrefabs.Count);
+        int roomIndex = Random.Range(0, RoomPrefabs.Count);
         GameObject chosenRoom = RoomPrefabs[roomIndex];
 
-        // Posição relativa no mundo
         Vector3 spawnPos = transform.TransformPoint(localOffset);
-
-        // Rotação para olhar na direção do offset
         Vector3 worldDirection = transform.TransformDirection(localOffset).normalized;
         Quaternion lookRotation = Quaternion.LookRotation(worldDirection, Vector3.up);
 
-        // Instancia com posição + rotação
-        GameObject instance = Instantiate(chosenRoom, spawnPos, lookRotation);
+        Vector3 size = scale;
+        if (CanPlaceRoom(spawnPos, size))
+        {
+            Instantiate(chosenRoom, spawnPos, lookRotation);
+        }
+        else
+        {
+            // cria uma parede
+        }
+
     }
 
-    // Desenhar no editor
+    bool CanPlaceRoom(Vector3 spawnPos, Vector3 size)
+    {
+        Collider[] hits = Physics.OverlapBox(spawnPos, size * 0.5f, Quaternion.identity);
+        return hits.Length == 0; // só instancia se não houver colisões
+    }
+
+
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.green;
-
         Vector3 spawnPos = transform.TransformPoint(localOffset);
-
-        // Linha até o ponto
         Gizmos.DrawLine(transform.position, spawnPos);
-
-        // Desenha cubo representando posição
         Gizmos.DrawWireCube(spawnPos, scale);
-
-        // Desenha setinha mostrando a frente do objeto
         Vector3 worldDirection = transform.TransformDirection(localOffset).normalized;
         Gizmos.color = Color.red;
-        Gizmos.DrawRay(spawnPos, worldDirection * 2f); // seta vermelha mostrando "frente"
+        Gizmos.DrawRay(spawnPos, worldDirection * 2f);
     }
 }
