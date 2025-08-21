@@ -52,7 +52,7 @@ public class ProceduralRoomPointGenerator : MonoBehaviour
     bool CanPlaceRoom(Vector3 spawnPos, Vector3 size)
     {
         Collider[] hits = Physics.OverlapBox(spawnPos, size * 0.5f, Quaternion.identity);
-        return hits.Length == 0; // só instancia se não houver colisões
+        return hits.Length == 0;
     }
 
 

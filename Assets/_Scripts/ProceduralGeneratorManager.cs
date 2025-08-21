@@ -14,6 +14,5 @@ public class ProceduralGeneratorManager : MonoBehaviour
     public void RegisterRoom()
     {
         currentRooms++;
-        Debug.Log("Total de salas: " + currentRooms);
     }
 }
