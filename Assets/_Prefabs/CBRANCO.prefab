@@ -124,6 +124,7 @@ MonoBehaviour:
   - {fileID: 4615846847005116628}
   - {fileID: 3231451788552590046, guid: 7c24452f944cd33489aa451e575798e8, type: 3}
   - {fileID: 4978158015762426437, guid: 691f2db7914cda148ac445e340d179d6, type: 3}
+  generatorManager: {fileID: 6384218006240379760, guid: 8a8d539d47dde4e4da8811b9b7709082, type: 3}
 --- !u!1 &4615846847005116628
 GameObject:
   m_ObjectHideFlags: 0
@@ -135,7 +136,7 @@ GameObject:
   - component: {fileID: 4191372630002849567}
   m_Layer: 0
   m_Name: CBRANCO
-  m_TagString: Untagged
+  m_TagString: Room
   m_Icon: {fileID: 4162164826716764455, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
