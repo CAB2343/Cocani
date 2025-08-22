@@ -8,6 +8,12 @@ using System;
 public class PlayerController : MonoBehaviour
 {
     #region Variables
+    [Header("Player Settings")]
+    public float standHeight = 2f; // Altura do jogador em pé
+    Vector3 standCenter = new Vector3(0f, 0.5f, 0f); // Centro do jogador em pé
+    public float crouchHeight = 1f; // Altura do jogador agachado
+    Vector3 crouchCenter = new Vector3(0f, 0.25f, 0f); // Centro do jogador agachado
+
 
     [Header("Camera Settings")]
     public bool _FPSCamera = true;
@@ -23,10 +29,7 @@ public class PlayerController : MonoBehaviour
     public bool _EnableMovement = true;
     public float _MoveSpeed = 5f;
     public float _RotationSpeed = 200f;
-
-    [Header("Combat Settings")]
-    public bool _EnableCombat = true;
-    private bool _isArmed = false;
+    private CharacterController _ChController;
 
     [Header("Jump Settings")]
     public bool _EnableJump = true;
@@ -34,7 +37,6 @@ public class PlayerController : MonoBehaviour
     public int _MaxJumps = 1;
     private int _jumpsLeft = 0;
     private bool _IsGrounded = false;
-    private CharacterController _ChController;
 
     private float _groundedTimer = 0f;
     private float _groundedGraceTime = 0.2f;
@@ -45,7 +47,7 @@ public class PlayerController : MonoBehaviour
 
 
 
-    [Header("Animation Movement Settings disarmed ")]
+    [Header("Animation Movement Settings")]
     public AnimancerComponent animancer;
     public AnimationClip idleClip;
     public float idleTransitionDuration = 0.1f;
@@ -65,12 +67,16 @@ public class PlayerController : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
+
         
     }
 
     void Update()
     {
-        if (_EnableMovement) Movement();
+        if (_EnableMovement){
+            Movement();
+            Agachar();
+        } 
         if (_EnableGravity) NormalGravity();
         if (_EnableJump) Jump();
 
@@ -81,6 +87,24 @@ public class PlayerController : MonoBehaviour
     #endregion
 
     #region Movement
+
+    void Agachar()
+    {
+        if(Input.GetKeyDown(KeyCode.LeftControl))
+        {
+            _ChController.height = crouchHeight;
+            _ChController.center = crouchCenter;
+            _MoveSpeed = 2.5f;
+        }
+        if(Input.GetKeyUp(KeyCode.LeftControl))
+        {
+            _ChController.height = standHeight;
+            _ChController.center = standCenter;
+            _MoveSpeed = 5f;
+
+        }
+    }
+
     void Movement()
     {
         float HorizontalInput = Input.GetAxisRaw("Horizontal");
@@ -103,6 +127,7 @@ public class PlayerController : MonoBehaviour
         }
     }
     #endregion
+
     #region Gravity
     void NormalGravity()
     {
@@ -144,16 +169,23 @@ public class PlayerController : MonoBehaviour
 
     void Animate()
     {
+
         float HorizontalInput = Input.GetAxisRaw("Horizontal");
         float VerticalInput = Input.GetAxisRaw("Vertical");
 
         if(HorizontalInput != 0 || VerticalInput != 0)
         {
-            animancer.Play(walkClip, walkTransitionDuration);
+            if(walkClip != null)
+            {
+                animancer.Play(walkClip, walkTransitionDuration);
+            }
         }
         else
         {
-            animancer.Play(idleClip, idleTransitionDuration);
+            if(idleClip != null)
+            {
+                animancer.Play(idleClip, idleTransitionDuration);
+            }
         }
     }
 
