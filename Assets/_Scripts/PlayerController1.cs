@@ -4,11 +4,11 @@ using UnityEngine;
 using Animancer;
 using Animancer.FSM;
 using System;
+using TMPro;
 
 public class PlayerController : MonoBehaviour
 {
     #region Variables
-    [Header("Player Settings")]
 
     [Header("Camera Settings")]
     public bool _FPSCamera = true;
@@ -21,9 +21,23 @@ public class PlayerController : MonoBehaviour
 
     [Header("Movement Settings")]
     public bool _EnableMovement = true;
-    public float _MoveSpeed = 5f;          // Velocidade base configurável
+    public float _MoveSpeed = 5f;          
     public float _RotationSpeed = 200f;
     private CharacterController _ChController;
+
+    [Header("Crouch Settings")]
+    public float crouchHeight = 1f;
+    public float crouchCameraOffset = -0.5f;
+    public float crouchTransitionSpeed = 8f;
+
+    private float originalHeight;
+    private Vector3 originalCenter;
+    private Vector3 originalCameraLocalPos;
+    private bool isCrouching = false;
+
+    private float targetHeight;
+    private Vector3 targetCenter;
+    private Vector3 targetCameraPos;
 
     [Header("Jump Settings")]
     public bool _EnableJump = true;
@@ -46,36 +60,6 @@ public class PlayerController : MonoBehaviour
     public AnimationClip walkClip;
     public float walkTransitionDuration = 0.1f;
 
-    // ------------------ Crouch Settings (Agachar) ------------------
-    [Header("Crouch (Agachar) Settings")]
-    public bool _EnableCrouch = true;
-    public KeyCode _CrouchKey = KeyCode.LeftControl;
-
-    [Tooltip("Altura em pé (se deixar 0, será a altura inicial do CharacterController).")]
-    public float _StandingHeight = 0f;
-
-    [Tooltip("Altura ao agachar.")]
-    public float _CrouchHeight = 1.2f;
-
-    [Tooltip("Velocidade da transição de altura/câmera.")]
-    public float _CrouchTransitionSpeed = 10f;
-
-    [Tooltip("Multiplicador da velocidade de movimento enquanto agachado.")]
-    public float _CrouchSpeedMultiplier = 0.5f;
-
-    [Tooltip("Offset vertical local negativo para a câmera quando agachado.")]
-    public float _CrouchCameraYOffset = -0.6f;
-
-    [Tooltip("Camadas que bloqueiam levantar.")]
-    public LayerMask _CrouchObstructionMask = ~0;
-
-    // Estados internos
-    private bool _isCrouching = false;
-    private float _currentTargetHeight;
-    private float _originalControllerHeight;
-    private Vector3 _originalControllerCenter;
-    private Vector3 _originalCameraLocalPos;
-
     #endregion
 
     #region Unity Methods
@@ -83,34 +67,27 @@ public class PlayerController : MonoBehaviour
     {
         _ChController = GetComponent<CharacterController>();
         _jumpsLeft = _MaxJumps;
-
         _MyCamera = Camera.main != null ? Camera.main.transform : null;
-
-        hand.SetActive(false);
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        // Inicializa alturas
-        _originalControllerHeight = _ChController.height;
-        _originalControllerCenter = _ChController.center;
+        originalHeight = _ChController.height;
+        originalCenter = _ChController.center;
+        if (_MyCamera != null)  originalCameraLocalPos = _MyCamera.localPosition;
 
-        if (_StandingHeight <= 0f)
-            _StandingHeight = _originalControllerHeight; // Usa a altura atual como de pé
-
-        _currentTargetHeight = _StandingHeight;
-
-        if (_MyCamera != null)
-            _originalCameraLocalPos = _MyCamera.localPosition;
+        targetHeight = originalHeight;
+        targetCenter = originalCenter;
+        targetCameraPos = originalCameraLocalPos;
     }
 
     void Update()
     {
-        if (_EnableCrouch) Agachar();           // 1º: atualiza estado de agachar
-        if (_EnableMovement) Movement();        // 2º: movimento usa estado atual
+        if (_EnableMovement) Movement();        
         if (_EnableGravity) NormalGravity();
         if (_EnableJump) Jump();
 
         HandleGrounding();
+        HandleCrouch();
         Animate();
     }
     #endregion
@@ -118,117 +95,55 @@ public class PlayerController : MonoBehaviour
     #region Movement
     void Movement()
     {
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        float vertical = Input.GetAxisRaw("Vertical");
+        float HorizontalInput = Input.GetAxisRaw("Horizontal");
+        float VerticalInput = Input.GetAxisRaw("Vertical");
+        Vector3 moveDirection = new Vector3(HorizontalInput, 0, VerticalInput).normalized;
+        moveDirection = _MyCamera.TransformDirection(moveDirection);
+        moveDirection.y = 0;
+        _ChController.Move(moveDirection * _MoveSpeed * Time.deltaTime);
 
-        Vector3 inputDir = new Vector3(horizontal, 0f, vertical).normalized;
-
-        if (inputDir.sqrMagnitude > 1f)
-            inputDir.Normalize();
-
-        // Converte para direção relativa à câmera
-        if (_MyCamera != null)
-        {
-            inputDir = _MyCamera.TransformDirection(inputDir);
-            inputDir.y = 0f;
-        }
-
-        // Velocidade efetiva (não alteramos a variável base _MoveSpeed)
-        float effectiveSpeed = _MoveSpeed * (_isCrouching ? _CrouchSpeedMultiplier : 1f);
-
-        _ChController.Move(inputDir * effectiveSpeed * Time.deltaTime);
-
-        // Rotação somente se não for FPS
-        if (inputDir != Vector3.zero && _FPSCamera == false)
+        if (moveDirection != Vector3.zero && _FPSCamera == false)
         {
             transform.rotation = Quaternion.Slerp(
                 transform.rotation,
-                Quaternion.LookRotation(inputDir),
+                Quaternion.LookRotation(moveDirection),
                 _RotationSpeed * Time.deltaTime
             );
         }
     }
-    #endregion
 
-    #region Crouch
-    void Agachar()
+    void HandleCrouch()
     {
-        // Entrada (hold). Para toggle basta usar GetKeyDown e inverter _isCrouching se puder levantar.
-        bool wantsCrouch = Input.GetKey(_CrouchKey);
-
-        if (wantsCrouch)
+        if (Input.GetKey(KeyCode.LeftControl))
         {
-            _isCrouching = true;
+            if (!isCrouching)
+            {
+                targetHeight = crouchHeight;
+                targetCenter = new Vector3(originalCenter.x, crouchHeight / 2f, originalCenter.z);
+                targetCameraPos = originalCameraLocalPos + new Vector3(0, crouchCameraOffset, 0);
+                isCrouching = true;
+                _MoveSpeed /= 2f; 
+            }
         }
         else
         {
-            // Só tenta levantar se há espaço
-            if (CanStandUp())
-                _isCrouching = false;
+            if (isCrouching)
+            {
+                targetHeight = originalHeight;
+                targetCenter = originalCenter;
+                targetCameraPos = originalCameraLocalPos;
+                isCrouching = false;
+                _MoveSpeed *= 2f; // Restore original speed when standing up
+            }
         }
 
-        // Define altura alvo
-        float targetHeight = _isCrouching ? _CrouchHeight : _StandingHeight;
-        _currentTargetHeight = Mathf.Lerp(_ChController.height, targetHeight, Time.deltaTime * _CrouchTransitionSpeed);
+        _ChController.height = Mathf.Lerp(_ChController.height, targetHeight, Time.deltaTime * crouchTransitionSpeed);
+        _ChController.center = Vector3.Lerp(_ChController.center, targetCenter, Time.deltaTime * crouchTransitionSpeed);
 
-        // Mantém pés no chão: center.y = halfHeight
-        float previousBottom = GetControllerBottomY();
-        _ChController.height = _currentTargetHeight;
-        _ChController.center = new Vector3(_originalControllerCenter.x, _currentTargetHeight / 2f, _originalControllerCenter.z);
-        AdjustTransformToKeepFeet(previousBottom);
-
-        // Ajuste suave da câmera
         if (_MyCamera != null)
-        {
-            Vector3 targetCamPos = _originalCameraLocalPos;
-            if (_isCrouching)
-                targetCamPos += Vector3.up * _CrouchCameraYOffset;
-
-            _MyCamera.localPosition = Vector3.Lerp(
-                _MyCamera.localPosition,
-                targetCamPos,
-                Time.deltaTime * _CrouchTransitionSpeed
-            );
-        }
+            _MyCamera.localPosition = Vector3.Lerp(_MyCamera.localPosition, targetCameraPos, Time.deltaTime * crouchTransitionSpeed);
     }
 
-    bool CanStandUp()
-    {
-        if (_ChController == null) return true;
-        // Se já perto da altura em pé, ok
-        if (Mathf.Abs(_ChController.height - _StandingHeight) < 0.05f)
-            return true;
-
-        float radius = _ChController.radius;
-        float castDistance = _StandingHeight - _ChController.height;
-
-        // Posição do topo atual
-        Vector3 start = transform.position + Vector3.up * (_ChController.height - radius);
-        // SphereCast para cima
-        if (Physics.SphereCast(start, radius * 0.95f, Vector3.up, out RaycastHit hit, castDistance, _CrouchObstructionMask, QueryTriggerInteraction.Ignore))
-        {
-            // Bloqueado
-            return false;
-        }
-        return true;
-    }
-
-    float GetControllerBottomY()
-    {
-        // Y do pé = transform.position.y + (center.y - height/2)
-        return transform.position.y + (_ChController.center.y - _ChController.height / 2f);
-    }
-
-    void AdjustTransformToKeepFeet(float previousBottomY)
-    {
-        float newBottom = GetControllerBottomY();
-        float delta = previousBottomY - newBottom;
-        if (Mathf.Abs(delta) > 0.0001f)
-        {
-            // Move o transform para manter os pés estáveis
-            transform.position += new Vector3(0f, delta, 0f);
-        }
-    }
     #endregion
 
     #region Gravity
