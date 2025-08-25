@@ -238,7 +238,7 @@ Transform:
   m_GameObject: {fileID: 2330525307188572397}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
-  m_LocalPosition: {x: -16.19, y: 14.03, z: 56.06}
+  m_LocalPosition: {x: -29.133047, y: 6.12, z: -14.06352}
   m_LocalScale: {x: 0.3844575, y: 0.3844575, z: 0.3844575}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -451,7 +451,7 @@ Transform:
   m_GameObject: {fileID: 4839997677445662924}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.122, y: 0.593, z: 44.92}
+  m_LocalPosition: {x: -0.76, y: -0.05, z: 44.92}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -544,7 +544,8 @@ MonoBehaviour:
   scale: {x: 1, y: 1, z: 1}
   RoomPrefabs:
   - {fileID: 2330525307188572397}
-  - {fileID: 3808048891988323783, guid: ce154edece0b4f641a70f4f6f9abb0c8, type: 3}
+  - {fileID: 6749703682527524104, guid: ce154edece0b4f641a70f4f6f9abb0c8, type: 3}
+  - {fileID: 6941644584288853796, guid: ee70a37e800413a4585f011370bcf5e7, type: 3}
 --- !u!1 &6200201347872073847
 GameObject:
   m_ObjectHideFlags: 0
