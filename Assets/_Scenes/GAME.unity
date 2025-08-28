@@ -333,7 +333,7 @@ RectTransform:
   m_GameObject: {fileID: 204086259}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.34, y: 0.34, z: 0.34}
+  m_LocalScale: {x: 0.87999994, y: 0.87999994, z: 0.87999994}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1855986710}
@@ -1273,6 +1273,51 @@ MonoBehaviour:
   virtualCamera: {fileID: 1407046806}
   amplitude: 0.5
   frequency: 1
+--- !u!1 &1026013972
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1026013974}
+  - component: {fileID: 1026013973}
+  m_Layer: 0
+  m_Name: MinimapManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1026013973
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1026013972}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d26df8276092d84f9019a4bbbe1a308, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  minimapUI: {fileID: 1855986709}
+--- !u!4 &1026013974
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1026013972}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -3.9625955, y: 2.3300629, z: -4.007218}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1027193866
 GameObject:
   m_ObjectHideFlags: 0
@@ -1408,14 +1453,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 13849e8a7da9864419d91d9059b42b98, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  standHeight: 2
-  crouchHeight: 1
   _FPSCamera: 1
   _EnableGravity: 1
   _gravity: -10
   _EnableMovement: 1
   _MoveSpeed: 5
   _RotationSpeed: 200
+  crouchHeight: 1
+  crouchCameraOffset: -0.5
+  crouchTransitionSpeed: 8
   _EnableJump: 1
   _JumpForce: 5
   _MaxJumps: 1
@@ -1731,7 +1777,7 @@ RectTransform:
   m_GameObject: {fileID: 1450343769}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 3.64, y: 3.64, z: 3.64}
+  m_LocalScale: {x: 9.47, y: 9.47, z: 9.47}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1855986710}
@@ -2003,7 +2049,7 @@ RectTransform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1450343770}
   - {fileID: 204086260}
@@ -2238,3 +2284,4 @@ SceneRoots:
   - {fileID: 1027193867}
   - {fileID: 891706308}
   - {fileID: 117066236}
+  - {fileID: 1026013974}
