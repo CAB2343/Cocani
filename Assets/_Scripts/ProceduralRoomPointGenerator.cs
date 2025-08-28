@@ -51,9 +51,10 @@ public class ProceduralRoomPointGenerator : MonoBehaviour
 
     bool CanPlaceRoom(Vector3 spawnPos, Vector3 size)
     {
-        Collider[] hits = Physics.OverlapBox(spawnPos, size * 0.5f, Quaternion.identity);
+        Collider[] hits = Physics.OverlapBox(spawnPos, size * 0.5f, transform.rotation);
         return hits.Length == 0;
     }
+
 
 
     private void OnDrawGizmos()
@@ -61,7 +62,9 @@ public class ProceduralRoomPointGenerator : MonoBehaviour
         Gizmos.color = Color.green;
         Vector3 spawnPos = transform.TransformPoint(localOffset);
         Gizmos.DrawLine(transform.position, spawnPos);
-        Gizmos.DrawWireCube(spawnPos, scale);
+        Gizmos.matrix = Matrix4x4.TRS(spawnPos, transform.rotation, Vector3.one);
+        Gizmos.DrawWireCube(Vector3.zero, scale);
+        Gizmos.matrix = Matrix4x4.identity; // reset
         Vector3 worldDirection = transform.TransformDirection(localOffset).normalized;
         Gizmos.color = Color.red;
         Gizmos.DrawRay(spawnPos, worldDirection * 2f);
