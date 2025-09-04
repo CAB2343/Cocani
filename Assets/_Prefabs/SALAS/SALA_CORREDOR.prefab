@@ -540,12 +540,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ded2e26073958d47950bc06fa98eaba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  localOffset: {x: 0, y: 0, z: 2.63}
-  scale: {x: 1, y: 1, z: 1}
+  localOffset: {x: 0, y: 0, z: 2.34}
+  boxMin: {x: -3.65, y: -4.49, z: 22.8}
+  boxMax: {x: 3.59, y: 4.35, z: 0.5}
   RoomPrefabs:
   - {fileID: 2330525307188572397}
-  - {fileID: 6749703682527524104, guid: ce154edece0b4f641a70f4f6f9abb0c8, type: 3}
   - {fileID: 6941644584288853796, guid: ee70a37e800413a4585f011370bcf5e7, type: 3}
+  - {fileID: 6749703682527524104, guid: ce154edece0b4f641a70f4f6f9abb0c8, type: 3}
+  - {fileID: 3585749867448374319, guid: 2505c4859b02e9c4d882e343210ad201, type: 3}
 --- !u!1 &6200201347872073847
 GameObject:
   m_ObjectHideFlags: 0
