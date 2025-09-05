@@ -37,6 +37,15 @@ public class GameOverManager : MonoBehaviour
         } 
     } 
 
+    void Update()
+    {
+        // Verifica se a tecla 'K' foi pressionada
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            ShowGameOverScreen();
+        }
+    }
+
     // Chama este método para mostrar a tela de Game Over 
     public void ShowGameOverScreen() 
     { 
@@ -80,4 +89,3 @@ public class GameOverManager : MonoBehaviour
         #endif 
     } 
 }
-
