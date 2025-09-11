@@ -6262,8 +6262,8 @@ MonoBehaviour:
   boxMax: {x: 3.59, y: 4.35, z: 0.5}
   RoomPrefabs:
   - {fileID: 2330525307188572397, guid: c19b5b47d2eec114797e11d3b6afc232, type: 3}
-  - {fileID: 6941644584288853796, guid: ee70a37e800413a4585f011370bcf5e7, type: 3}
   - {fileID: 3585749867448374319, guid: 2505c4859b02e9c4d882e343210ad201, type: 3}
+  - {fileID: 354476704147846857, guid: ee70a37e800413a4585f011370bcf5e7, type: 3}
 --- !u!1 &2171954271353466299
 GameObject:
   m_ObjectHideFlags: 0
