@@ -4,16 +4,15 @@ using System.Collections.Generic;
 public class ProceduralRoomPointGenerator : MonoBehaviour
 {
     public Vector3 localOffset = Vector3.forward;
-    public Vector3 boxMin = new Vector3(-0.5f, -0.5f, -0.5f);
-    public Vector3 boxMax = new Vector3(0.5f, 0.5f, 0.5f);
     public List<GameObject> RoomPrefabs = new List<GameObject>();
+    public GameObject WallPrefab; // adicione isso no inspetor para definir sua parede
 
     [SerializeField] private GameObject creator;
     [SerializeField] private GameObject created;
 
     public GameObject Creator { get => creator; set => creator = value; }
     public GameObject Created { get => created; set => created = value; }
-
+    public GameObject RoomRoot => transform.root.gameObject;
 
     private ProceduralGeneratorManager generatorManager;
 
@@ -36,102 +35,108 @@ public class ProceduralRoomPointGenerator : MonoBehaviour
 
         bool spawned = false;
 
+        // embaralhar lista
         List<GameObject> shuffledPrefabs = new List<GameObject>(RoomPrefabs);
         ShuffleList(shuffledPrefabs);
 
-foreach (GameObject prefab in shuffledPrefabs)
-{
-    Quaternion lookRotation = Quaternion.LookRotation(worldDirection, Vector3.up);
-
-    Debug.Log($"{name} tentando instanciar {prefab.name} em {spawnPos}");
-
-    if (CanPlaceRoom(spawnPos, worldDirection))
-    {
-        GameObject newRoom = Instantiate(prefab, spawnPos, lookRotation);
-        ProceduralRoomPointGenerator newRoomGenerator = newRoom.GetComponentInChildren<ProceduralRoomPointGenerator>();
-        if (newRoomGenerator == null)
+        foreach (GameObject prefab in shuffledPrefabs)
         {
-            Debug.LogWarning($"{newRoom.name} não tem ProceduralRoomPointGenerator!");
+            Quaternion lookRotation = Quaternion.LookRotation(worldDirection, Vector3.up);
+
+            Debug.Log($"{name} tentando instanciar {prefab.name} em {spawnPos}");
+
+            if (CanPlaceRoom(spawnPos, lookRotation, prefab))
+            {
+                GameObject newRoom = Instantiate(prefab, spawnPos, lookRotation);
+
+                ProceduralRoomPointGenerator newRoomGenerator = newRoom.GetComponentInChildren<ProceduralRoomPointGenerator>();
+                if (newRoomGenerator == null)
+                {
+                    Debug.LogWarning($"{newRoom.name} não tem ProceduralRoomPointGenerator!");
+                }
+                else
+                {
+                    newRoomGenerator.Creator = this.gameObject;
+                    this.Created = newRoom;
+                    Debug.Log($"{name} criou {newRoom.name}");
+                    Debug.Log($"{newRoom.name} foi criado por {newRoomGenerator.Creator.name}");
+                }
+
+                spawned = true;
+                break; // achou sala válida, para
+            }
         }
 
-        if (newRoomGenerator != null)
-        {
-            newRoomGenerator.Creator = this.gameObject;
-            this.Created = newRoom;
-            Debug.Log($"{name} criou {newRoom.name}");
-            Debug.Log($"{newRoom.name} foi criado por {newRoomGenerator.Creator.name}");
-        }
-
-        spawned = true;
-        break;
-    }
-}
-
-
-
+        // se nenhuma coube, gera parede (sem contar como "room")
         if (!spawned)
         {
+            if (WallPrefab != null)
+            {
+                Quaternion wallRotation = Quaternion.LookRotation(worldDirection, Vector3.up);
+                Instantiate(WallPrefab, spawnPos, wallRotation, transform.parent);
 
-            // gerar parede
+                Debug.Log($"{name} não conseguiu instanciar nenhuma sala, gerando parede.");
+            }
+            else
+            {
+                Debug.Log($"{name} não conseguiu instanciar nenhuma sala e não há WallPrefab configurado.");
+            }
         }
     }
 
-    
-
-
-bool CanPlaceRoom(Vector3 spawnPos, Vector3 direction)
-{
-    // calcula centro e tamanho do box
-    Vector3 halfExtents = (boxMax - boxMin) * 0.5f;
-    Vector3 centerLocal = (boxMin + boxMax) * 0.5f;
-    Vector3 centerWorld = spawnPos + transform.rotation * centerLocal;
-
-    // pega todos os colliders dentro do box
-    Collider[] hits = Physics.OverlapBox(centerWorld, halfExtents, transform.rotation);
-
-    foreach (Collider col in hits)
+    bool CanPlaceRoom(Vector3 spawnPos, Quaternion rotation, GameObject prefab)
     {
-        // ignora a si mesmo e seus filhos
-        if (col.transform.root == transform.root)
-            continue;
+        Bounds prefabBounds = GetPrefabBounds(prefab);
 
-        Debug.Log($"{name} não pode instanciar, colisão com {col.name}");
-        return false;
+        if (prefabBounds.size == Vector3.zero)
+        {
+            Debug.LogWarning($"{prefab.name} não tem colliders!");
+            return false;
+        }
+
+        Vector3 halfExtents = prefabBounds.extents;
+        Vector3 center = spawnPos + rotation * prefabBounds.center;
+
+        Collider[] hits = Physics.OverlapBox(center, halfExtents, rotation);
+
+        foreach (Collider col in hits)
+        {
+            if (col.transform.root == transform.root) 
+                continue;
+
+            Debug.Log($"{name} não pode instanciar {prefab.name}, colisão com {col.name}");
+            return false;
+        }
+
+        return true;
     }
 
-    float checkDistance = (boxMax - boxMin).magnitude;
-    if (Physics.Raycast(spawnPos, direction, checkDistance))
+    Bounds GetPrefabBounds(GameObject prefab)
     {
-        Debug.Log($"{name} não pode instanciar, algo bloqueia o caminho");
-        return false;
+        Collider[] colliders = prefab.GetComponentsInChildren<Collider>();
+        if (colliders.Length == 0)
+            return new Bounds(Vector3.zero, Vector3.zero);
+
+        Bounds bounds = colliders[0].bounds;
+        foreach (Collider c in colliders)
+        {
+            bounds.Encapsulate(c.bounds);
+        }
+
+        bounds.center = prefab.transform.InverseTransformPoint(bounds.center);
+        return bounds;
     }
-    return true;
-}
-
-
 
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.green;
         Vector3 spawnPos = transform.TransformPoint(localOffset);
-
-        Vector3 centerLocal = (boxMin + boxMax) * 0.5f;
-        Vector3 centerWorld = spawnPos + transform.rotation * centerLocal;
-        Vector3 size = (boxMax - boxMin);
-
-        Gizmos.matrix = Matrix4x4.TRS(centerWorld, transform.rotation, Vector3.one);
-        Gizmos.DrawWireCube(Vector3.zero, size);
-        Gizmos.matrix = Matrix4x4.identity;
+        Gizmos.DrawWireSphere(spawnPos, 0.25f);
 
         Gizmos.color = Color.red;
         Vector3 worldDirection = transform.TransformDirection(localOffset).normalized;
         Gizmos.DrawRay(spawnPos, worldDirection * 2f);
     }
-
-
-
-
-
 
     void ShuffleList<T>(List<T> list)
     {
@@ -143,7 +148,4 @@ bool CanPlaceRoom(Vector3 spawnPos, Vector3 direction)
             list[randomIndex] = temp;
         }
     }
-    
-
-
 }

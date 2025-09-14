@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 4997197700174708643}
   - component: {fileID: 3135995823722383131}
   - component: {fileID: 3144146621689761921}
+  - component: {fileID: 4147382063443693548}
   m_Layer: 0
   m_Name: end (2)
   m_TagString: Untagged
@@ -119,13 +120,35 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   localOffset: {x: 0, y: 0, z: 2.34}
-  boxMin: {x: -3.65, y: -4.49, z: 22.8}
-  boxMax: {x: 3.59, y: 4.35, z: 0.5}
   RoomPrefabs:
   - {fileID: 2330525307188572397, guid: c19b5b47d2eec114797e11d3b6afc232, type: 3}
   - {fileID: 6749703682527524104, guid: ce154edece0b4f641a70f4f6f9abb0c8, type: 3}
   - {fileID: 3585749867448374319}
   - {fileID: 354476704147846857, guid: ee70a37e800413a4585f011370bcf5e7, type: 3}
+  WallPrefab: {fileID: 6245076825591899093, guid: 9ee9798e34474014fa0f9e0c5ec0ccf9, type: 3}
+  creator: {fileID: 0}
+  created: {fileID: 0}
+--- !u!65 &4147382063443693548
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 435838753541009619}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 38.832527, y: 22.570183, z: 32.575768}
+  m_Center: {x: 9.718329, y: 0, z: -11.399999}
 --- !u!1 &1141710911722097877
 GameObject:
   m_ObjectHideFlags: 0
@@ -708,10 +731,9 @@ GameObject:
   - component: {fileID: 7272202746325914650}
   - component: {fileID: 2139096692814446061}
   - component: {fileID: 6335606605410453184}
-  - component: {fileID: 80498102508518594}
   m_Layer: 0
   m_Name: SALA_CORREDOR_T
-  m_TagString: Untagged
+  m_TagString: Room
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -784,27 +806,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &80498102508518594
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3585749867448374319}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &3596312098943451112
 GameObject:
   m_ObjectHideFlags: 0
@@ -1028,6 +1029,7 @@ GameObject:
   - component: {fileID: 5769187420728456693}
   - component: {fileID: 1671946303574169317}
   - component: {fileID: 6267190328376511249}
+  - component: {fileID: 5813652864160684815}
   m_Layer: 0
   m_Name: end (1)
   m_TagString: Untagged
@@ -1134,13 +1136,35 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   localOffset: {x: 0, y: 0, z: 2.34}
-  boxMin: {x: -3.65, y: -4.49, z: 22.8}
-  boxMax: {x: 3.59, y: 4.35, z: 0.5}
   RoomPrefabs:
   - {fileID: 2330525307188572397, guid: c19b5b47d2eec114797e11d3b6afc232, type: 3}
   - {fileID: 6749703682527524104, guid: ce154edece0b4f641a70f4f6f9abb0c8, type: 3}
   - {fileID: 3585749867448374319}
   - {fileID: 354476704147846857, guid: ee70a37e800413a4585f011370bcf5e7, type: 3}
+  WallPrefab: {fileID: 6245076825591899093, guid: 9ee9798e34474014fa0f9e0c5ec0ccf9, type: 3}
+  creator: {fileID: 0}
+  created: {fileID: 0}
+--- !u!65 &5813652864160684815
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3928921469175048340}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 42.057117, y: 24.1, z: 32.380283}
+  m_Center: {x: -10.286267, y: 0, z: -10.612299}
 --- !u!1 &3929885671010180903
 GameObject:
   m_ObjectHideFlags: 0

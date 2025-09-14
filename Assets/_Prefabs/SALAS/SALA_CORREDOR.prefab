@@ -522,12 +522,12 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 21.04, y: 18.02, z: 50.24434}
+  m_Center: {x: -0, y: -1.1, z: -25.12217}
 --- !u!114 &2996727174994735572
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -541,13 +541,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   localOffset: {x: 0, y: 0, z: 2.34}
-  boxMin: {x: -3.65, y: -4.49, z: 22.8}
-  boxMax: {x: 3.59, y: 4.35, z: 0.5}
   RoomPrefabs:
   - {fileID: 2330525307188572397}
   - {fileID: 354476704147846857, guid: ee70a37e800413a4585f011370bcf5e7, type: 3}
   - {fileID: 6749703682527524104, guid: ce154edece0b4f641a70f4f6f9abb0c8, type: 3}
   - {fileID: 3585749867448374319, guid: 2505c4859b02e9c4d882e343210ad201, type: 3}
+  - {fileID: 8545129872485726029, guid: 579e0fcfd638000428ac567e86adeac4, type: 3}
+  WallPrefab: {fileID: 6245076825591899093, guid: 9ee9798e34474014fa0f9e0c5ec0ccf9, type: 3}
+  creator: {fileID: 0}
+  created: {fileID: 0}
 --- !u!1 &6200201347872073847
 GameObject:
   m_ObjectHideFlags: 0
