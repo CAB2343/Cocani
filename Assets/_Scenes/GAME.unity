@@ -123,31 +123,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &17606822 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2159063610893793031, guid: ce154edece0b4f641a70f4f6f9abb0c8, type: 3}
-  m_PrefabInstance: {fileID: 374831797}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &17606828
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 17606822}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7ded2e26073958d47950bc06fa98eaba, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  localOffset: {x: 0, y: 0, z: 2.34}
-  RoomPrefabs:
-  - {fileID: 2330525307188572397, guid: c19b5b47d2eec114797e11d3b6afc232, type: 3}
-  - {fileID: 3585749867448374319, guid: 2505c4859b02e9c4d882e343210ad201, type: 3}
-  - {fileID: 354476704147846857, guid: ee70a37e800413a4585f011370bcf5e7, type: 3}
-  WallPrefab: {fileID: 0}
-  creator: {fileID: 0}
-  created: {fileID: 0}
 --- !u!1 &36877654
 GameObject:
   m_ObjectHideFlags: 0
@@ -599,22 +574,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3030108707511055017, guid: ce154edece0b4f641a70f4f6f9abb0c8, type: 3}
-      propertyPath: m_TagString
-      value: Untagged
-      objectReference: {fileID: 0}
     - target: {fileID: 6749703682527524104, guid: ce154edece0b4f641a70f4f6f9abb0c8, type: 3}
       propertyPath: m_Name
       value: SALA_OXIGENIO
       objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 7334570460333381174, guid: ce154edece0b4f641a70f4f6f9abb0c8, type: 3}
+    m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 2159063610893793031, guid: ce154edece0b4f641a70f4f6f9abb0c8, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 17606828}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ce154edece0b4f641a70f4f6f9abb0c8, type: 3}
 --- !u!1 &594863388
 GameObject:
@@ -1515,7 +1482,7 @@ GameObject:
   - component: {fileID: 1078356547}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1585,7 +1552,7 @@ CapsuleCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 0
+  m_Enabled: 1
   serializedVersion: 2
   m_Radius: 0.5
   m_Height: 2

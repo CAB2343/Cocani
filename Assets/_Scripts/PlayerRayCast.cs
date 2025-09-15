@@ -19,7 +19,7 @@ public class PlayerRayCast : MonoBehaviour
         RaycastHit hit; 
         Debug.DrawRay(RayOrigin, transform.forward * distanciaDoRaio, Color.red);
 
-        if(Physics.Raycast(ray, out hit, distanciaDoRaio))
+        if (Physics.Raycast(ray, out hit, distanciaDoRaio))
         {
             Debug.Log(hit.collider.name);
         }
