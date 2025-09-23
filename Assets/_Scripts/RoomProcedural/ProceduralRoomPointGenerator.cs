@@ -5,7 +5,7 @@ public class ProceduralRoomPointGenerator : MonoBehaviour
 {
     public Vector3 localOffset = Vector3.forward;
     public List<GameObject> RoomPrefabs = new List<GameObject>();
-    public GameObject WallPrefab; // adicione isso no inspetor para definir sua parede
+    public GameObject WallPrefab; 
 
     [SerializeField] private GameObject creator;
     [SerializeField] private GameObject created;
@@ -35,7 +35,7 @@ public class ProceduralRoomPointGenerator : MonoBehaviour
 
         bool spawned = false;
 
-        // embaralhar lista
+
         List<GameObject> shuffledPrefabs = new List<GameObject>(RoomPrefabs);
         ShuffleList(shuffledPrefabs);
 
@@ -63,19 +63,17 @@ public class ProceduralRoomPointGenerator : MonoBehaviour
                 }
 
                 spawned = true;
-                break; // achou sala válida, para
+                break; 
             }
         }
 
-        // se nenhuma coube, gera parede (sem contar como "room")
+        
         if (!spawned)
         {
             if (WallPrefab != null)
             {
                 Quaternion wallRotation = Quaternion.LookRotation(worldDirection, Vector3.up);
                 Instantiate(WallPrefab, spawnPos, wallRotation, transform.parent);
-
-                Debug.Log($"{name} não conseguiu instanciar nenhuma sala, gerando parede.");
             }
             else
             {
@@ -90,7 +88,6 @@ public class ProceduralRoomPointGenerator : MonoBehaviour
 
         if (prefabBounds.size == Vector3.zero)
         {
-            Debug.LogWarning($"{prefab.name} não tem colliders!");
             return false;
         }
 
