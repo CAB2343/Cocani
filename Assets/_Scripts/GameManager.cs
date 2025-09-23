@@ -114,11 +114,19 @@ public class GameManager : MonoBehaviour
         particleRect.anchoredPosition = new Vector2(xPos, yPos);
 
         // Add click listener
+        Image particleImage = particleGO.GetComponent<Image>();
+        if (particleImage == null)
+        {
+            particleImage = particleGO.AddComponent<Image>();
+        }
+        particleImage.raycastTarget = true; // Ensure image can receive raycasts
+
         Button particleButton = particleGO.GetComponent<Button>();
         if (particleButton == null)
         {
             particleButton = particleGO.AddComponent<Button>();
         }
+        particleButton.targetGraphic = particleImage; // Set the image as the button's target graphic
         particleButton.onClick.RemoveAllListeners(); // Ensure no duplicate listeners
         particleButton.onClick.AddListener(() => OnParticleClicked(particleGO));
 
