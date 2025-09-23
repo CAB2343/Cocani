@@ -6,7 +6,7 @@ using Animancer.FSM;
 using System;
 using TMPro;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController1 : MonoBehaviour
 {
     #region Variables
 
