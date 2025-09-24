@@ -10,6 +10,10 @@ public class GridManager : MonoBehaviour
     public GameObject cellPrefab;
     public RectTransform container;
 
+    [Header("Player column (visual)")]
+    public RectTransform playerColumnContainer; // assign no Inspector (coluna acima do grid)
+    public bool showPlayerColumn = true;
+
     [Header("Grid")]
     public int rows = 10;
     public int cols = 15;
@@ -20,20 +24,16 @@ public class GridManager : MonoBehaviour
     public float shuffleInterval = 0.15f;
 
     [Header("Fixed trio")]
-    [Tooltip("Se true, posição e chars do trio serão escolhidos aleatoriamente no Start")]
     public bool randomizeOnStart = true;
-    [Tooltip("Permite usar dígitos 0-9 além das letras A-Z")]
     public bool includeNumbers = true;
     public string target = "ABC";
     public int fixedRow = 4;
     public int fixedColStart = 5;
 
     [Header("Runtime dynamics")]
-    [Tooltip("Se true, o trio será re-randomizado a cada respawnInterval")]
     public bool respawnFixedTrio = false;
     public float respawnInterval = 8f;
 
-    // eventos: onTrioChanged já existia; adicionei onGridReady
     public UnityEvent onTrioChanged;
     public UnityEvent onGridReady;
 
@@ -42,6 +42,9 @@ public class GridManager : MonoBehaviour
     private Coroutine shuffleCoroutine;
     private Coroutine respawnCoroutine;
     private GridLayoutGroup gridLayout;
+
+    // player column internals
+    private Cell[] playerColumnCells = new Cell[3];
 
     void Start()
     {
@@ -64,6 +67,10 @@ public class GridManager : MonoBehaviour
 
         PrepareLayout();
         GenerateGrid();
+
+        // inicializa coluna do jogador (visual)
+        if (showPlayerColumn)
+            InitPlayerColumn();
 
         shuffleCoroutine = StartCoroutine(ShuffleRoutine());
 
@@ -142,7 +149,10 @@ public class GridManager : MonoBehaviour
         Canvas.ForceUpdateCanvases();
         UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(container);
 
-        // --- grid está pronto: dispara evento onGridReady
+        // inicializa/atualiza a coluna do jogador depois do grid criado
+        if (showPlayerColumn)
+            InitPlayerColumn();
+
         onGridReady?.Invoke();
     }
 
@@ -304,6 +314,94 @@ public class GridManager : MonoBehaviour
         }
     }
 
+    // -------- player column methods --------
     public int GetRows() => rows;
     public int GetCols() => cols;
+
+    void InitPlayerColumn()
+    {
+        if (playerColumnContainer == null || cellPrefab == null) return;
+        if (playerColumnCells[0] != null) return; // já inicializado
+
+        // respeita layout existente
+        var existingGrid = playerColumnContainer.GetComponent<GridLayoutGroup>();
+        var existingHor = playerColumnContainer.GetComponent<HorizontalLayoutGroup>();
+
+        if (existingGrid != null)
+        {
+            existingGrid.cellSize = new Vector2(cellSize, cellSize);
+            existingGrid.spacing = new Vector2(spacing, spacing);
+            existingGrid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            existingGrid.constraintCount = 3;
+            existingGrid.childAlignment = TextAnchor.MiddleCenter;
+            existingGrid.startAxis = GridLayoutGroup.Axis.Horizontal;
+        }
+        else if (existingHor != null)
+        {
+            existingHor.spacing = spacing;
+            existingHor.childAlignment = TextAnchor.MiddleCenter;
+        }
+        else
+        {
+            var grid = playerColumnContainer.gameObject.AddComponent<GridLayoutGroup>();
+            grid.cellSize = new Vector2(cellSize, cellSize);
+            grid.spacing = new Vector2(spacing, spacing);
+            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            grid.constraintCount = 3;
+            grid.childAlignment = TextAnchor.MiddleCenter;
+            grid.startAxis = GridLayoutGroup.Axis.Horizontal;
+        }
+
+        // limpa filhos e cria 3 células
+        for (int i = playerColumnContainer.childCount - 1; i >= 0; i--)
+            Destroy(playerColumnContainer.GetChild(i).gameObject);
+
+        for (int i = 0; i < 3; i++)
+        {
+            GameObject go = Instantiate(cellPrefab, playerColumnContainer);
+            go.name = $"PlayerColumnCell_{i}";
+            go.SetActive(true);
+            playerColumnCells[i] = go.GetComponent<Cell>();
+        }
+    }
+
+
+
+    /// <summary>
+    /// Copia visual das 3 células alvo para a coluna do jogador.
+    /// Se row < 0 => limpa/oculta.
+    /// </summary>
+    public void UpdatePlayerColumn(int row, int colStart)
+    {
+        if (!showPlayerColumn) return;
+        if (playerColumnCells[0] == null) InitPlayerColumn();
+        if (playerColumnCells[0] == null) return;
+
+        if (row < 0)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                if (playerColumnCells[i] != null)
+                    playerColumnCells[i].Clear();
+            }
+            return;
+        }
+
+        colStart = Mathf.Clamp(colStart, 0, Mathf.Max(0, cols - 3));
+
+        for (int i = 0; i < 3; i++)
+        {
+            var src = GetCell(row, colStart + i);
+            var dst = playerColumnCells[i];
+            if (dst == null) continue;
+            if (src == null)
+            {
+                dst.Clear();
+                continue;
+            }
+
+            // copia visual sem alterar estado do grid
+            dst.CopyFrom(src);
+        }
+    }
 }

@@ -1,3 +1,4 @@
+// Cell.cs
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
@@ -86,5 +87,54 @@ public class Cell : MonoBehaviour
         {
             label.text = (currentChar == '\0') ? "" : currentChar.ToString();
         }
+    }
+
+    // --- métodos utilitários solicitados pelo GridManager / PlayerTrioController
+
+    /// <summary>
+    /// Copia apenas visual (sprite, cor e texto) de outra célula sem alterar estado de grid.
+    /// </summary>
+    public void CopyFrom(Cell src)
+    {
+        if (src == null) { Clear(); return; }
+
+        if (label != null && src.label != null)
+            label.text = src.label.text;
+
+        if (background != null && src.background != null)
+        {
+            background.sprite = src.background.sprite;
+            background.color = src.background.color;
+        }
+        // não copia row/col/isStatic/currentChar
+        overlayChar = '\0';
+        hasOverlay = false;
+    }
+
+    /// <summary>
+    /// Limpa visual da célula usada para a coluna do jogador.
+    /// </summary>
+    public void Clear()
+    {
+        if (label != null) label.text = "";
+        if (background != null)
+        {
+            Color c = background.color;
+            c.a = 0f;
+            background.color = c;
+        }
+        overlayChar = '\0';
+        hasOverlay = false;
+    }
+
+    /// <summary>
+    /// Define alpha do background de forma segura.
+    /// </summary>
+    public void SetBackgroundAlpha(float a)
+    {
+        if (background == null) return;
+        Color c = background.color;
+        c.a = Mathf.Clamp01(a);
+        background.color = c;
     }
 }
