@@ -1,59 +1,165 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// PlayerTrioController — modo "movimento totalmente dentro do grid"
-/// - Os heldChars nunca mudam ao se mover.
-/// - A movimentação altera quais células exibem (temporariamente) os heldChars.
-/// - overlayMode = true -> aplicação visual temporária (não altera valores do grid).
-/// - overlayMode = false -> stampMode: escreve os chars na célula (persistente).
+/// PlayerTrioController — aguarda GridManager.onGridReady, suporta startRow = -1 (overlay acima do grid).
+/// OverlayMode: heldChars nunca mudam ao se mover.
 /// </summary>
 public class PlayerTrioController : MonoBehaviour
 {
     [Header("Refs")]
     public GridManager gridManager;    // seu GridManager
-    public RectTransform playerParent; // só para exibir a UI do trio (opcional)
-    public GameObject cellPrefab;      // caso precise instanciar localmente (não obrigatório)
+    public RectTransform playerParent; // container UI fixo (overlay no canto superior-esquerdo)
+    public GameObject cellPrefab;      // prefab cell (mesmo usado pelo GridManager)
 
     [Header("Config")]
-    public int startRow = 0;           // linha inicial lógica dentro do grid
-    public int startCol = 0;           // coluna inicial lógica (0 .. cols-3)
+    [Tooltip("-1 = overlay acima do grid")]
+    public int startRow = -1;          // permite -1
+    public int startCol = 0;
     public bool wrapHorizontally = false;
-    [Tooltip("true = apenas sobrepor visualmente (recomendado). false = escrever nos cells (persistente).")]
     public bool overlayMode = true;
+
+    [Header("Sync")]
+    public bool syncHeldWithFixedTrioOnStart = true;
+    public bool autoSyncHeldWithGridTrio = false;
 
     // estado
     private int curRow;
     private int curColStart;
     private char[] heldChars = new char[3];
 
-    // referência para células que atualmente tem overlay (para limpar ao mover)
+    // internals
+    private GameObject[] playerSlots = new GameObject[3];
+    private GridLayoutGroup playerLayout;
     private Cell[] lastOverlayCells = new Cell[3];
 
-    void Start()
+    IEnumerator Start()
     {
+        // referências obrigatórias
         if (gridManager == null)
         {
             Debug.LogError("PlayerTrioController: atribua GridManager no inspector.");
             enabled = false;
-            return;
+            yield break;
+        }
+        if (playerParent == null)
+        {
+            Debug.LogError("PlayerTrioController: atribua playerParent (RectTransform) no inspector.");
+            enabled = false;
+            yield break;
+        }
+        if (cellPrefab == null)
+        {
+            Debug.LogError("PlayerTrioController: atribua cellPrefab no inspector.");
+            enabled = false;
+            yield break;
         }
 
-        // posição lógica inicial
-        curRow = Mathf.Clamp(startRow, 0, Mathf.Max(0, gridManager.GetRows() - 1));
+        // Se o Grid já estiver pronto (cells geradas), inicialize na hora.
+        bool gridReadyNow = (gridManager.GetCell(0, 0) != null) || (gridManager.GetFixedTrioCells() != null && gridManager.GetFixedTrioCells().Length >= 3 && gridManager.GetFixedTrioCells()[0] != null);
+        if (gridReadyNow)
+        {
+            InitAfterGridReady();
+            yield break;
+        }
+
+        // Se GridManager expõe onGridReady, inscrevemos e esperamos o evento. Senão, fallback: espera polling curto.
+        bool subscribed = false;
+        if (gridManager.onGridReady != null)
+        {
+            gridManager.onGridReady.AddListener(InitAfterGridReady);
+            subscribed = true;
+        }
+
+        // fallback polling (timeout) caso o evento não exista ou não seja disparado
+        float timeout = 2f;
+        float t = 0f;
+        while (gridManager.GetCell(0, 0) == null && t < timeout)
+        {
+            t += Time.deltaTime;
+            yield return null;
+        }
+
+        // se assinamos o evento, InitAfterGridReady já será chamado quando disparar; se não, chamamos aqui.
+        if (!subscribed)
+        {
+            InitAfterGridReady();
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (gridManager != null && gridManager.onGridReady != null)
+            gridManager.onGridReady.RemoveListener(InitAfterGridReady);
+
+        if (gridManager != null && gridManager.onTrioChanged != null)
+            gridManager.onTrioChanged.RemoveListener(OnGridTrioChanged);
+    }
+
+    // inicialização segura depois que o Grid está pronto
+    void InitAfterGridReady()
+    {
+        // evitar múltiplas chamadas
+        if (playerSlots[0] != null) return;
+
+        // setup GridLayoutGroup no playerParent
+        playerLayout = playerParent.GetComponent<GridLayoutGroup>();
+        if (playerLayout == null) playerLayout = playerParent.gameObject.AddComponent<GridLayoutGroup>();
+
+        playerLayout.cellSize = new Vector2(gridManager.cellSize, gridManager.cellSize);
+        playerLayout.spacing = new Vector2(gridManager.spacing, gridManager.spacing);
+        playerLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+        playerLayout.constraintCount = 3;
+        playerLayout.childAlignment = TextAnchor.MiddleCenter;
+
+        // clamp de posição inicial: permite -1
+        curRow = Mathf.Clamp(startRow, -1, gridManager.GetRows() - 1);
         curColStart = Mathf.Clamp(startCol, 0, Mathf.Max(0, gridManager.GetCols() - 3));
 
-        // inicia heldChars com o trio fixo do GridManager (ou substitua chamando SetHeldChars de outro script)
-        string initial = gridManager.GetFixedTrioString();
-        if (string.IsNullOrEmpty(initial) || initial.Length < 3) initial = "   ";
-        SetHeldChars(initial);
+        // instanciar slots do overlay
+        for (int i = 0; i < 3; i++)
+        {
+            GameObject go = Instantiate(cellPrefab, playerParent);
+            go.name = $"PlayerSlot_{i}";
+            go.SetActive(true);
+            playerSlots[i] = go;
+        }
 
-        // aplica overlay inicial na posição lógica
+        // sincroniza heldChars com trio fixo do GridManager (opcional)
+        if (syncHeldWithFixedTrioOnStart && gridManager != null)
+        {
+            string fixedStr = gridManager.GetFixedTrioString();
+            if (!string.IsNullOrEmpty(fixedStr) && fixedStr.Length >= 3)
+            {
+                SetHeldChars(fixedStr);
+                CopyFixedTrioBackgroundsToOverlay();
+            }
+            else
+            {
+                SetHeldChars("   ");
+            }
+        }
+        else
+        {
+            SetHeldChars("   ");
+        }
+
+        // registrar onTrioChanged (opcional)
+        if (gridManager.onTrioChanged != null)
+            gridManager.onTrioChanged.AddListener(OnGridTrioChanged);
+
+        // aplica overlay inicial (se curRow == -1 apenas atualiza o overlay fixo; se >=0 aplica sobre células)
         ApplyOverlayAt(curRow, curColStart);
+        SnapSlotsToParent();
+
+        Debug.Log("PlayerTrioController: initialization complete (grid ready).");
     }
 
     void Update()
     {
+        // não processa input até ter inicializado
+        if (playerSlots[0] == null) return;
         HandleInput();
     }
 
@@ -86,8 +192,8 @@ public class PlayerTrioController : MonoBehaviour
 
         if (!moved) return;
 
-        // clamp/warp
-        newRow = Mathf.Clamp(newRow, 0, gridManager.GetRows() - 1);
+        // clamp/warp (agora permite -1)
+        newRow = Mathf.Clamp(newRow, -1, gridManager.GetRows() - 1);
         int maxColStart = Mathf.Max(0, gridManager.GetCols() - 3);
         if (wrapHorizontally)
         {
@@ -99,62 +205,69 @@ public class PlayerTrioController : MonoBehaviour
             newCol = Mathf.Clamp(newCol, 0, maxColStart);
         }
 
-        // se posição mudou: limpar overlay antigo e aplicar no novo local
         if (newRow != curRow || newCol != curColStart)
         {
             ClearOverlayAt(curRow, curColStart);
             curRow = newRow;
             curColStart = newCol;
             ApplyOverlayAt(curRow, curColStart);
+            SnapSlotsToParent();
 
-            Debug.Log($"Player move -> row:{curRow} colStart:{curColStart} held:{new string(heldChars)}");
+            Debug.Log($"Player move -> row:{curRow} colStart:{curColStart} held:{GetHeldString()}");
         }
     }
 
-    /// <summary>
-    /// Define os 3 chars que o jogador carrega (não serão alterados ao mover).
-    /// </summary>
     public void SetHeldChars(string s)
     {
         if (string.IsNullOrEmpty(s)) s = "   ";
         for (int i = 0; i < 3; i++)
             heldChars[i] = (i < s.Length) ? s[i] : '\0';
-        // atualiza overlay se já aplicamos antes
-        ApplyOverlayAt(curRow, curColStart);
+
+        RefreshOverlayVisuals();
     }
 
-    // aplica o heldChars sobre as 3 células na posição (row, colStart)
     void ApplyOverlayAt(int row, int colStart)
     {
         if (gridManager == null) return;
 
-        // limpa last overlay (por segurança) antes de marcar novos
-        ClearLastOverlayCache();
+        // se row == -1: não tentamos escrever/overlay nas células do grid — apenas atualizamos a UI do overlay
+        if (row == -1)
+        {
+            // limpar overlays anteriores nas células (se houver)
+            if (overlayMode) ClearOverlayOnLastCells();
+            // atualizar apenas os slots do overlay
+            RefreshOverlayVisuals();
+            return;
+        }
 
+        // caso row >= 0: aplicamos overlay/stamp nas células correspondentes
+        ClearLastOverlayCache();
         for (int i = 0; i < 3; i++)
         {
             int c = colStart + i;
             Cell cell = gridManager.GetCell(row, c);
             lastOverlayCells[i] = cell;
-
             if (cell == null) continue;
 
             if (overlayMode)
-            {
-                // visual temporário: sobrepõe apenas a visual, não altera currentChar
                 cell.SetOverlayChar(heldChars[i]);
-            }
             else
-            {
-                // stamp mode: escreve permanentemente o held char na célula
                 cell.SetChar(heldChars[i]);
-            }
         }
+
+        // atualizar também o overlay visual fixo (playerSlots)
+        RefreshOverlayVisuals();
     }
 
-    // limpa overlay das células que armazenamos antes
     void ClearOverlayAt(int row, int colStart)
     {
+        if (row == -1)
+        {
+            // nothing to clear on grid cells; just clear cached overlays
+            ClearOverlayOnLastCells();
+            return;
+        }
+
         if (overlayMode)
         {
             for (int i = 0; i < 3; i++)
@@ -169,7 +282,19 @@ public class PlayerTrioController : MonoBehaviour
         }
         else
         {
-            // em stampMode não temos overlay pra limpar; se quiser reverter algo, implementa aqui.
+            // stamp mode: não reverte alterações por padrão
+        }
+    }
+
+    void ClearOverlayOnLastCells()
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            if (lastOverlayCells[i] != null)
+            {
+                lastOverlayCells[i].ClearOverlay();
+                lastOverlayCells[i] = null;
+            }
         }
     }
 
@@ -177,6 +302,77 @@ public class PlayerTrioController : MonoBehaviour
     {
         for (int i = 0; i < 3; i++)
             lastOverlayCells[i] = null;
+    }
+
+    void RefreshOverlayVisuals()
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            var slotGO = playerSlots[i];
+            if (slotGO == null) continue;
+            var slotCell = slotGO.GetComponent<Cell>();
+            if (slotCell == null) continue;
+
+            slotCell.SetOverlayChar(heldChars[i]);
+
+            // preferir copiar background do trio fixo para manter identidade visual
+            if (gridManager != null)
+            {
+                Cell[] fixedTrio = gridManager.GetFixedTrioCells();
+                if (fixedTrio != null && fixedTrio.Length >= 3 && fixedTrio[i] != null)
+                {
+                    var src = fixedTrio[i];
+                    if (slotCell.background != null && src.background != null)
+                    {
+                        slotCell.background.sprite = src.background.sprite;
+                        slotCell.background.color = src.background.color;
+                    }
+                }
+            }
+        }
+    }
+
+    void CopyFixedTrioBackgroundsToOverlay()
+    {
+        if (gridManager == null) return;
+        Cell[] fixedTrio = gridManager.GetFixedTrioCells();
+        if (fixedTrio == null || fixedTrio.Length < 3) return;
+
+        for (int i = 0; i < 3; i++)
+        {
+            var src = fixedTrio[i];
+            var slotGO = playerSlots[i];
+            if (src != null && slotGO != null)
+            {
+                var slotCell = slotGO.GetComponent<Cell>();
+                if (slotCell != null && slotCell.background != null && src.background != null)
+                {
+                    slotCell.background.sprite = src.background.sprite;
+                    slotCell.background.color = src.background.color;
+                }
+            }
+        }
+    }
+
+    void OnGridTrioChanged()
+    {
+        Debug.Log("GridManager: trio mudou (evento recebido).");
+        if (!autoSyncHeldWithGridTrio || gridManager == null) return;
+
+        string fixedStr = gridManager.GetFixedTrioString();
+        if (!string.IsNullOrEmpty(fixedStr) && fixedStr.Length >= 3)
+        {
+            SetHeldChars(fixedStr);
+            CopyFixedTrioBackgroundsToOverlay();
+            ApplyOverlayAt(curRow, curColStart);
+        }
+    }
+
+    void SnapSlotsToParent()
+    {
+        if (playerParent == null) return;
+        Canvas.ForceUpdateCanvases();
+        LayoutRebuilder.ForceRebuildLayoutImmediate(playerParent);
     }
 
     // utilitários

@@ -33,10 +33,12 @@ public class GridManager : MonoBehaviour
     public bool respawnFixedTrio = false;
     public float respawnInterval = 8f;
 
+    // eventos: onTrioChanged já existia; adicionei onGridReady
     public UnityEvent onTrioChanged;
+    public UnityEvent onGridReady;
 
     private Cell[,] grid;
-    private Cell[] fixedTrioCells = new Cell[3]; // <<<< NOVO
+    private Cell[] fixedTrioCells = new Cell[3];
     private Coroutine shuffleCoroutine;
     private Coroutine respawnCoroutine;
     private GridLayoutGroup gridLayout;
@@ -124,7 +126,7 @@ public class GridManager : MonoBehaviour
                     cell.isStatic = true;
                     int idx = c - fixedColStart;
                     cell.SetChar(target[idx]);
-                    fixedTrioCells[idx] = cell; // <<<< MARCA O TRIO
+                    fixedTrioCells[idx] = cell;
                 }
                 else
                 {
@@ -139,6 +141,9 @@ public class GridManager : MonoBehaviour
 
         Canvas.ForceUpdateCanvases();
         UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(container);
+
+        // --- grid está pronto: dispara evento onGridReady
+        onGridReady?.Invoke();
     }
 
     IEnumerator ShuffleRoutine()
@@ -198,7 +203,7 @@ public class GridManager : MonoBehaviour
                     cell.isStatic = true;
                     int idx = c - fixedColStart;
                     cell.SetChar(target[idx]);
-                    fixedTrioCells[idx] = cell; // <<<< ATUALIZA TRIO
+                    fixedTrioCells[idx] = cell;
                 }
                 else
                 {
@@ -240,7 +245,7 @@ public class GridManager : MonoBehaviour
         return grid[row, col];
     }
 
-    public Cell[] GetFixedTrioCells() => fixedTrioCells; // <<<< NOVO
+    public Cell[] GetFixedTrioCells() => fixedTrioCells;
 
     public Vector3 GetCellWorldPosition(int row, int col)
     {
