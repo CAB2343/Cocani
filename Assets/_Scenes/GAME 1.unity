@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
+  m_IndirectSpecularColor: {r: 0.18028346, g: 0.22571373, b: 0.30692244, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -123,6 +123,50 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &215028721
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 215028722}
+  - component: {fileID: 215028723}
+  m_Layer: 5
+  m_Name: PlayerTrioParent
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &215028722
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 215028721}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 679068730}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.256, y: 0.84730583}
+  m_AnchorMax: {x: 0.4361226, y: 0.9480001}
+  m_AnchoredPosition: {x: 0, y: 4.899994}
+  m_SizeDelta: {x: -200, y: -31}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &215028723
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 215028721}
+  m_CullTransparentMesh: 1
 --- !u!1 &304825617
 GameObject:
   m_ObjectHideFlags: 0
@@ -218,14 +262,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: fa96c53dd8f0a27499014a7227c66f33, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -597,6 +641,7 @@ RectTransform:
   m_Children:
   - {fileID: 648071637}
   - {fileID: 310443531}
+  - {fileID: 215028722}
   m_Father: {fileID: 1378310273}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -941,40 +986,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: afcc4d9b2084d0b49ac6e9e610acf96f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  allowedLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  allowedTags:
-  - Player
-  interactKey: 102
-  requireHold: 1
-  holdDuration: 0.8
-  promptRoot: {fileID: 598842135}
-  promptText: {fileID: 2029925944}
-  progressFill: {fileID: 0}
-  singleUse: 0
-  cooldown: 0
-  OnEnter:
-    m_PersistentCalls:
-      m_Calls: []
-  OnExit:
-    m_PersistentCalls:
-      m_Calls: []
-  OnInteract:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1773286243}
-        m_TargetAssemblyTypeName: MiniGameController, Assembly-CSharp
-        m_MethodName: Open
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+  playerTag: Player
+  miniGameController: {fileID: 1773286243}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -1115,8 +1128,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e697acf8bfdc46547aa58ac179b26949, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  distanciaDoRaio: 5
-  LugarDoRaio: 0.8
+  distanciaDoRaio: 2
+  alturaDoRaio: 0
+  interactKey: 102
+  promptUI: {fileID: 0}
 --- !u!1 &1027193866
 GameObject:
   m_ObjectHideFlags: 0
@@ -1706,6 +1721,57 @@ Terrain:
   m_EnableHeightmapRayTracing: 1
   m_EnableTreesAndDetailsRayTracing: 0
   m_TreeMotionVectorModeOverride: 3
+--- !u!1 &1762627152
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1762627153}
+  - component: {fileID: 1762627154}
+  m_Layer: 0
+  m_Name: PlayerTrio
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1762627153
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1762627152}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1773286244}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1762627154
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1762627152}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0fa71492700a1c54a9fb8754928e0989, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gridManager: {fileID: 1915390088}
+  playerParent: {fileID: 215028722}
+  cellPrefab: {fileID: 648071636}
+  startRow: -1
+  startCol: 10
+  wrapHorizontally: 0
+  overlayMode: 1
 --- !u!1 &1773286242
 GameObject:
   m_ObjectHideFlags: 0
@@ -1736,9 +1802,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   miniGameUI: {fileID: 1378310272}
-  playerController: {fileID: 1078356540}
-  overridePlayerCamera: {fileID: 963194227}
-  unlockCursorOnOpen: 1
+  playerRoot: {fileID: 1078356540}
+  disablePlayerRootOnOpen: 0
+  movementScripts:
+  - {fileID: 1078356540}
+  virtualCameras:
+  - {fileID: 1407046806}
+  cinemachineBrain: {fileID: 963194229}
+  exitWithEscForDebug: 1
 --- !u!4 &1773286244
 Transform:
   m_ObjectHideFlags: 0
@@ -1754,6 +1825,7 @@ Transform:
   m_Children:
   - {fileID: 1915390089}
   - {fileID: 715107829}
+  - {fileID: 1762627153}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1915390087
@@ -1799,6 +1871,21 @@ MonoBehaviour:
   fixedColStart: 0
   respawnFixedTrio: 1
   respawnInterval: 10000
+  onTrioChanged:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: 
+        m_MethodName: 
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!4 &1915390089
 Transform:
   m_ObjectHideFlags: 0
@@ -2200,6 +2287,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 679068730}
     m_Modifications:
+    - target: {fileID: 3797538012282795259, guid: b44ba9cf7b457cb48b7ff370fefe9bc9, type: 3}
+      propertyPath: m_Color.a
+      value: 0.9647059
+      objectReference: {fileID: 0}
+    - target: {fileID: 3797538012282795259, guid: b44ba9cf7b457cb48b7ff370fefe9bc9, type: 3}
+      propertyPath: m_Color.b
+      value: 0.4627451
+      objectReference: {fileID: 0}
+    - target: {fileID: 3797538012282795259, guid: b44ba9cf7b457cb48b7ff370fefe9bc9, type: 3}
+      propertyPath: m_Color.g
+      value: 0.10268393
+      objectReference: {fileID: 0}
+    - target: {fileID: 3797538012282795259, guid: b44ba9cf7b457cb48b7ff370fefe9bc9, type: 3}
+      propertyPath: m_Color.r
+      value: 0.09158064
+      objectReference: {fileID: 0}
     - target: {fileID: 4215352978863162859, guid: b44ba9cf7b457cb48b7ff370fefe9bc9, type: 3}
       propertyPath: m_SizeDelta.x
       value: 0

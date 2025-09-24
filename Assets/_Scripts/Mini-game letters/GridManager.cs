@@ -1,7 +1,8 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Collections;
+using UnityEngine.Events;
 
 public class GridManager : MonoBehaviour
 {
@@ -23,7 +24,7 @@ public class GridManager : MonoBehaviour
     public bool randomizeOnStart = true;
     [Tooltip("Permite usar dígitos 0-9 além das letras A-Z")]
     public bool includeNumbers = true;
-    public string target = "ABC";    // será sobrescrito se randomizeOnStart == true
+    public string target = "ABC";
     public int fixedRow = 4;
     public int fixedColStart = 5;
 
@@ -32,13 +33,17 @@ public class GridManager : MonoBehaviour
     public bool respawnFixedTrio = false;
     public float respawnInterval = 8f;
 
+    public UnityEvent onTrioChanged;
+
     private Cell[,] grid;
+    private Cell[] fixedTrioCells = new Cell[3]; // <<<< NOVO
     private Coroutine shuffleCoroutine;
     private Coroutine respawnCoroutine;
+    private GridLayoutGroup gridLayout;
 
     void Start()
     {
-        if (Application.isPlaying == false) return;
+        if (!Application.isPlaying) return;
 
         if (cellPrefab == null || container == null)
         {
@@ -72,13 +77,13 @@ public class GridManager : MonoBehaviour
 
     void PrepareLayout()
     {
-        var layout = container.GetComponent<GridLayoutGroup>();
-        if (layout == null) layout = container.gameObject.AddComponent<GridLayoutGroup>();
-        layout.cellSize = new Vector2(cellSize, cellSize);
-        layout.spacing = new Vector2(spacing, spacing);
-        layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-        layout.constraintCount = cols;
-        layout.childAlignment = TextAnchor.UpperLeft;
+        gridLayout = container.GetComponent<GridLayoutGroup>();
+        if (gridLayout == null) gridLayout = container.gameObject.AddComponent<GridLayoutGroup>();
+        gridLayout.cellSize = new Vector2(cellSize, cellSize);
+        gridLayout.spacing = new Vector2(spacing, spacing);
+        gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+        gridLayout.constraintCount = cols;
+        gridLayout.childAlignment = TextAnchor.UpperLeft;
     }
 
     void GenerateGrid()
@@ -92,11 +97,16 @@ public class GridManager : MonoBehaviour
             else DestroyImmediate(child);
         }
 
+        if (cellPrefab != null && cellPrefab.activeSelf)
+            cellPrefab.SetActive(false);
+
         for (int r = 0; r < rows; r++)
         {
             for (int c = 0; c < cols; c++)
             {
-                var go = Instantiate(cellPrefab, container);
+                GameObject go = Instantiate(cellPrefab, container);
+                go.SetActive(false);
+
                 go.name = $"Cell_{r}_{c}";
                 var cell = go.GetComponent<Cell>();
                 if (cell == null)
@@ -114,6 +124,7 @@ public class GridManager : MonoBehaviour
                     cell.isStatic = true;
                     int idx = c - fixedColStart;
                     cell.SetChar(target[idx]);
+                    fixedTrioCells[idx] = cell; // <<<< MARCA O TRIO
                 }
                 else
                 {
@@ -122,8 +133,12 @@ public class GridManager : MonoBehaviour
                 }
 
                 grid[r, c] = cell;
+                go.SetActive(true);
             }
         }
+
+        Canvas.ForceUpdateCanvases();
+        UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(container);
     }
 
     IEnumerator ShuffleRoutine()
@@ -154,12 +169,10 @@ public class GridManager : MonoBehaviour
         }
     }
 
-    // escolhe posição e chars aleatórias
     void PickRandomFixedTrio()
     {
         fixedRow = Random.Range(0, rows);
-        // fixedColStart deve permitir trio de 3 colunas: 0..cols-3 inclusive
-        fixedColStart = Random.Range(0, cols - 2); // upper exclusive => max cols-3
+        fixedColStart = Random.Range(0, cols - 2);
 
         target = "";
         string charset = includeNumbers ? "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ" : "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -170,10 +183,10 @@ public class GridManager : MonoBehaviour
         }
     }
 
-    // aplica a configuração atual do trio ao grid já gerado
     void ApplyFixedTrioToGrid()
     {
         if (grid == null) return;
+
         for (int r = 0; r < rows; r++)
         {
             for (int c = 0; c < cols; c++)
@@ -183,17 +196,23 @@ public class GridManager : MonoBehaviour
                 if (r == fixedRow && c >= fixedColStart && c < fixedColStart + 3)
                 {
                     cell.isStatic = true;
-                    cell.SetChar(target[c - fixedColStart]);
+                    int idx = c - fixedColStart;
+                    cell.SetChar(target[idx]);
+                    fixedTrioCells[idx] = cell; // <<<< ATUALIZA TRIO
                 }
                 else
                 {
-                    // se era estática antes, agora libera e sorteia novo char
                     if (cell.isStatic)
                         cell.SetChar(RandomChar());
                     cell.isStatic = false;
                 }
             }
         }
+
+        onTrioChanged?.Invoke();
+
+        Canvas.ForceUpdateCanvases();
+        UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(container);
     }
 
     char RandomChar()
@@ -203,7 +222,6 @@ public class GridManager : MonoBehaviour
         return charset[i];
     }
 
-    // método público para forçar manualmente um trio (pos ou target)
     public void SetFixedTrio(int row, int colStart, string newTarget)
     {
         fixedRow = Mathf.Clamp(row, 0, rows - 1);
@@ -211,4 +229,76 @@ public class GridManager : MonoBehaviour
         if (!string.IsNullOrEmpty(newTarget) && newTarget.Length == 3) target = newTarget;
         ApplyFixedTrioToGrid();
     }
+
+    public string GetFixedTrioString() => target;
+
+    public Cell GetCell(int row, int col)
+    {
+        if (grid == null) return null;
+        if (row < 0 || row >= rows) return null;
+        if (col < 0 || col >= cols) return null;
+        return grid[row, col];
+    }
+
+    public Cell[] GetFixedTrioCells() => fixedTrioCells; // <<<< NOVO
+
+    public Vector3 GetCellWorldPosition(int row, int col)
+    {
+        col = Mathf.Clamp(col, 0, cols - 1);
+
+        if (grid != null)
+        {
+            if (row >= 0 && row < rows)
+            {
+                var cell = grid[row, col];
+                if (cell != null)
+                    return cell.transform.position;
+            }
+            else if (row == -1)
+            {
+                var cell = grid[0, col];
+                if (cell != null)
+                {
+                    Vector3 basePos = cell.transform.position;
+                    float offset = (gridLayout != null) ? (gridLayout.cellSize.y + gridLayout.spacing.y) : (cellSize + spacing);
+                    return basePos + Vector3.up * offset;
+                }
+            }
+        }
+
+        return container != null ? container.position : Vector3.zero;
+    }
+
+    public void StartShuffle()
+    {
+        if (shuffleCoroutine == null)
+            shuffleCoroutine = StartCoroutine(ShuffleRoutine());
+    }
+
+    public void StopShuffle()
+    {
+        if (shuffleCoroutine != null)
+        {
+            StopCoroutine(shuffleCoroutine);
+            shuffleCoroutine = null;
+        }
+    }
+
+    public void ForceShuffleOnce()
+    {
+        if (grid == null) return;
+        for (int r = 0; r < rows; r++)
+        {
+            for (int c = 0; c < cols; c++)
+            {
+                var cell = grid[r, c];
+                if (cell == null) continue;
+                if (!cell.isStatic)
+                    cell.SetChar(RandomChar());
+            }
+        }
+    }
+
+    public int GetRows() => rows;
+    public int GetCols() => cols;
 }
