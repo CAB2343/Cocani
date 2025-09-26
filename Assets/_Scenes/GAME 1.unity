@@ -156,7 +156,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -289, y: 231}
+  m_AnchoredPosition: {x: -296.60004, y: 235.39998}
   m_SizeDelta: {x: -50, y: 33}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &215028723
@@ -192,7 +192,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 271377035}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -201,7 +201,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -292.70007, y: -33.19995}
   m_SizeDelta: {x: 0, y: 40}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &271377037
@@ -1911,14 +1911,22 @@ MonoBehaviour:
   gridManager: {fileID: 1915390088}
   playerParent: {fileID: 215028722}
   cellPrefab: {fileID: 648071636}
-  playerBackgroundColor: {r: 1, g: 1, b: 1, a: 0.7176471}
-  playerTextColor: {r: 0, g: 0, b: 0, a: 1}
+  miniGameController: {fileID: 1773286243}
+  successCloseDelay: 3
+  failCloseDelay: 3
+  playerBackgroundColor: {r: 0, g: 0, b: 0, a: 0.9019608}
+  playerTextColor: {r: 1, g: 1, b: 1, a: 1}
+  successBackgroundColor: {r: 0.18600929, g: 0.7169812, b: 0.18600929, a: 0.77254903}
+  failureBackgroundColor: {r: 0.49056602, g: 0.108757555, b: 0.108757555, a: 0.9372549}
+  timeLimitSeconds: 15
   startRow: 1
   startCol: 0
   wrapHorizontally: 0
   overlayMode: 1
   syncHeldWithFixedTrioOnStart: 1
   autoSyncHeldWithGridTrio: 0
+  curRow: 0
+  curColStart: 0
 --- !u!1 &1773286242
 GameObject:
   m_ObjectHideFlags: 0
@@ -1956,6 +1964,9 @@ MonoBehaviour:
   virtualCameras:
   - {fileID: 1407046806}
   cinemachineBrain: {fileID: 963194229}
+  playerTrio: {fileID: 1762627154}
+  gridManager: {fileID: 1915390088}
+  resetGridOnOpen: 1
   exitWithEscForDebug: 1
 --- !u!4 &1773286244
 Transform:
@@ -2007,7 +2018,8 @@ MonoBehaviour:
   cellPrefab: {fileID: 648071636}
   container: {fileID: 310443531}
   playerColumnContainer: {fileID: 271377036}
-  showPlayerColumn: 1
+  showPlayerColumn: 0
+  playerColumnTextColor: {r: 0, g: 0, b: 0, a: 1}
   rows: 10
   cols: 15
   cellSize: 40
@@ -2018,8 +2030,10 @@ MonoBehaviour:
   target: 
   fixedRow: 0
   fixedColStart: 0
+  reservedLeftColumns: 3
   respawnFixedTrio: 1
   respawnInterval: 10000
+  failureResetDelay: 1
   onTrioChanged:
     m_PersistentCalls:
       m_Calls: []
