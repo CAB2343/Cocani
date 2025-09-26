@@ -70,6 +70,8 @@ public class GameManager : MonoBehaviour
         ClearParticles();
         UpdateUI();
         PauseGame(); // Pause the main game
+        minigamePanel.SetActive(true); // Ativa o painel do minigame
+        Debug.Log("GameManager: MinigamePanel ativado!");
 
         StartCoroutine(SpawnParticlesRoutine());
     }
