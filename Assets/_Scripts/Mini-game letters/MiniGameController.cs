@@ -15,6 +15,11 @@ public class MiniGameController : MonoBehaviour
     public CinemachineVirtualCamera[] virtualCameras;
     public CinemachineBrain cinemachineBrain;
 
+    [Header("Mini-game hooks")]
+    public PlayerTrioController playerTrio; // referência para controlar timer/start/stop
+    public GridManager gridManager;         // referência para reset do grid
+    public bool resetGridOnOpen = true;     // se true, chama gridManager.ResetMiniGame() antes de abrir
+
     [Header("Debug")]
     public bool exitWithEscForDebug = true;
 
@@ -45,6 +50,23 @@ public class MiniGameController : MonoBehaviour
             miniGameUI.SetActive(true);
 
         if (isOpen) return; // evita duplo open que sobrescreva estados
+
+        Debug.Log("MiniGameController: Open() called.");
+
+        // opcional: garante grid limpo antes de abrir
+        if (resetGridOnOpen && gridManager != null)
+        {
+            Debug.Log("MiniGameController: Resetting grid before opening mini-game.");
+            gridManager.ResetMiniGame();
+        }
+
+        // inicia mini-game interno (reseta timer e inicia)
+        if (playerTrio != null)
+        {
+            playerTrio.ResetMiniGameTimer();
+            playerTrio.StartMiniGame();
+            Debug.Log("MiniGameController: PlayerTrio timer reset and started.");
+        }
 
         isOpen = true;
 
@@ -98,6 +120,16 @@ public class MiniGameController : MonoBehaviour
 
         if (!isOpen) return;
 
+        Debug.Log("MiniGameController: Close() called.");
+
+        // stop mini-game timer and input
+        if (playerTrio != null)
+        {
+            playerTrio.StopMiniGame();
+            playerTrio.ResetMiniGameTimer(); // deixa pronto para próximo Open
+            Debug.Log("MiniGameController: PlayerTrio timer stopped and reset.");
+        }
+
         isOpen = false;
 
         // restore playerRoot
@@ -107,7 +139,6 @@ public class MiniGameController : MonoBehaviour
         // restore movement scripts from map
         if (movementPrevMap != null)
         {
-            // snapshot keys to avoid collection-mod during iteration
             var keys = new List<MonoBehaviour>(movementPrevMap.Keys);
             foreach (var mb in keys)
             {
@@ -135,5 +166,8 @@ public class MiniGameController : MonoBehaviour
             cinemachineBrain.enabled = prevBrainEnabled;
 
         prevPlayerRootStored = false;
+
+        // opcional: reset do grid ao fechar (comente se não quiser)
+        // if (gridManager != null) gridManager.ResetMiniGame();
     }
 }

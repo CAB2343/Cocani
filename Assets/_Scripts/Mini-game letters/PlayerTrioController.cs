@@ -1,4 +1,3 @@
-// PlayerTrioController.cs
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,10 +9,22 @@ public class PlayerTrioController : MonoBehaviour
     public GridManager gridManager;
     public RectTransform playerParent;
     public GameObject cellPrefab;
+    public MiniGameController miniGameController; // ASSIGN no Inspector (opcional)
+
+    [Header("Fechamento automático")]
+    public float successCloseDelay = 3f; // tempo em segundos para fechar após sucesso
+    public float failCloseDelay = 3f;    // tempo em segundos para fechar após falha
 
     [Header("Cores do jogador (Inspector)")]
     public Color playerBackgroundColor = new Color(1f, 1f, 1f, 1f); // alpha 1 = 255
     public Color playerTextColor = Color.black;
+
+    [Header("Resultado visual")]
+    public Color successBackgroundColor = Color.green;
+    public Color failureBackgroundColor = Color.red;
+
+    [Header("Tempo")]
+    public float timeLimitSeconds = 30f;
 
     [Header("Config")]
     public int startRow = -1;
@@ -26,8 +37,8 @@ public class PlayerTrioController : MonoBehaviour
     public bool autoSyncHeldWithGridTrio = false;
 
     // estado
-    private int curRow;
-    private int curColStart;
+    [HideInInspector] public int curRow;
+    [HideInInspector] public int curColStart;
     private char[] heldChars = new char[3];
 
     // internals
@@ -35,6 +46,11 @@ public class PlayerTrioController : MonoBehaviour
     private Cell[] lastOverlayCells = new Cell[3];
     private Color[] savedBgColors = new Color[3];
     private Color[] savedTextColors = new Color[3];
+
+    // timer
+    private float timeRemaining;
+    private Coroutine timerCoroutine;
+    private bool miniGameRunning = false;
 
     IEnumerator Start()
     {
@@ -57,9 +73,14 @@ public class PlayerTrioController : MonoBehaviour
 
     void OnDestroy()
     {
-        if (gridManager != null && gridManager.onTrioChanged != null)
-            gridManager.onTrioChanged.RemoveListener(OnGridTrioChanged);
+        if (gridManager != null)
+        {
+            if (gridManager.onTrioChanged != null) gridManager.onTrioChanged.RemoveListener(OnGridTrioChanged);
+            if (gridManager.onGridReady != null) gridManager.onGridReady.RemoveListener(OnGridReady);
+        }
+
         RestoreLastBackgrounds();
+        if (timerCoroutine != null) StopCoroutine(timerCoroutine);
         if (gridManager != null) gridManager.UpdatePlayerColumn(-1, 0);
     }
 
@@ -95,14 +116,28 @@ public class PlayerTrioController : MonoBehaviour
         if (gridManager.onTrioChanged != null)
             gridManager.onTrioChanged.AddListener(OnGridTrioChanged);
 
+        if (gridManager.onGridReady != null)
+            gridManager.onGridReady.AddListener(OnGridReady);
+
         ApplyOverlayAt(curRow, curColStart);
-        // atualiza coluna visual do GridManager
         if (gridManager != null) gridManager.UpdatePlayerColumn(curRow, curColStart);
         RefreshOverlayVisuals();
+
+        Debug.Log("PlayerTrioController: Initialized. Timer NOT started. Call StartMiniGame() to begin.");
+    }
+
+    // called when GridManager regenerates the grid (reset)
+    void OnGridReady()
+    {
+        Debug.Log("PlayerTrioController: OnGridReady -> reapplying overlay to current pos.");
+        // re-fetch cells and reapply overlay visually
+        ApplyOverlayAt(curRow, curColStart);
+        if (gridManager != null) gridManager.UpdatePlayerColumn(curRow, curColStart);
     }
 
     void Update()
     {
+        if (!miniGameRunning) return;
         HandleInput();
     }
 
@@ -135,16 +170,188 @@ public class PlayerTrioController : MonoBehaviour
             curColStart = newCol;
             ApplyOverlayAt(curRow, curColStart);
             if (gridManager != null) gridManager.UpdatePlayerColumn(curRow, curColStart);
+            CheckForSuccess();
         }
     }
+
+    IEnumerator TimerRoutine()
+    {
+        Debug.Log($"PlayerTrioController: TimerRoutine started: {timeRemaining:F2}s");
+        while (timeRemaining > 0f && miniGameRunning)
+        {
+            yield return null;
+            timeRemaining -= Time.deltaTime;
+        }
+
+        if (!miniGameRunning) yield break;
+
+        if (timeRemaining <= 0f)
+        {
+            miniGameRunning = false;
+            Debug.Log($"PlayerTrioController: Timer expired. curRow={curRow} curColStart={curColStart} held='{GetHeldString()}'");
+            OnTimeExpired();
+        }
+    }
+
+    void OnTimeExpired()
+    {
+        Debug.Log("PlayerTrioController: OnTimeExpired triggered.");
+
+        // close UI first so player can't continue moving
+        if (miniGameController != null)
+        {
+            Debug.Log($"PlayerTrioController: FAIL -> will close mini-game after {failCloseDelay:F2}s");
+            StartCoroutine(CloseAfterDelay(failCloseDelay));
+        }
+
+        // monta array de células controladas (se houver)
+        Cell[] controlled = null;
+        if (curRow >= 0)
+        {
+            controlled = new Cell[3];
+            for (int i = 0; i < 3; i++)
+            {
+                controlled[i] = gridManager.GetCell(curRow, curColStart + i);
+                Debug.Log($"  Controlled cell {i} = {(controlled[i] != null ? $"[{controlled[i].row},{controlled[i].col}]" : "null")}");
+            }
+        }
+        else
+        {
+            Debug.Log("  curRow == -1 -> nenhum cell do grid está controlado no momento.");
+        }
+
+        // tell GridManager to paint only controlled cells and reset after delay
+        if (gridManager != null)
+            gridManager.MiniGameFail(failureBackgroundColor, gridManager.failureResetDelay, controlled);
+
+        // pinta também os slots do jogador em vermelho (feedback curto)
+        for (int i = 0; i < 3; i++)
+        {
+            var slot = playerSlots[i];
+            if (slot == null) continue;
+            var c = slot.GetComponent<Cell>();
+            if (c != null && c.background != null)
+            {
+                c.background.color = failureBackgroundColor;
+                Debug.Log($"  Player slot {i} painted failure color.");
+            }
+        }
+    }
+
+    void CheckForSuccess()
+    {
+        if (!miniGameRunning) return;
+        if (gridManager == null) return;
+
+        if (curRow != gridManager.fixedRow) return;
+        if (curColStart != gridManager.fixedColStart) return;
+
+        string fixedStr = gridManager.GetFixedTrioString();
+        if (string.IsNullOrEmpty(fixedStr) || fixedStr.Length < 3) return;
+
+        for (int i = 0; i < 3; i++)
+        {
+            char hc = heldChars[i];
+            if (hc == '\0' || hc != fixedStr[i])
+            {
+                Debug.Log($"PlayerTrioController: CheckForSuccess failed at index {i}. held='{hc}' expected='{fixedStr[i]}'");
+                return;
+            }
+        }
+
+        // sucesso
+        miniGameRunning = false;
+        if (timerCoroutine != null) { StopCoroutine(timerCoroutine); timerCoroutine = null; }
+
+        Debug.Log($"PlayerTrioController: SUCCESS! held='{GetHeldString()}' matched target='{fixedStr}' at row={curRow} colStart={curColStart}. Time remaining={timeRemaining:F2}s");
+
+        if (gridManager != null)
+            gridManager.MiniGameSuccess(successBackgroundColor);
+
+        // pinta os 3 cells que o jogador estava controlando
+        for (int i = 0; i < 3; i++)
+        {
+            var cell = gridManager.GetCell(curRow, curColStart + i);
+            if (cell != null && cell.background != null)
+                cell.background.color = successBackgroundColor;
+        }
+
+        // pinta os slots do jogador
+        for (int i = 0; i < 3; i++)
+        {
+            var slot = playerSlots[i];
+            if (slot == null) continue;
+            var c = slot.GetComponent<Cell>();
+            if (c != null && c.background != null)
+                c.background.color = successBackgroundColor;
+        }
+
+        // close UI now that player succeeded (with delay)
+        if (miniGameController != null)
+        {
+            Debug.Log($"PlayerTrioController: SUCCESS -> will close mini-game after {successCloseDelay:F2}s");
+            StartCoroutine(CloseAfterDelay(successCloseDelay));
+        }
+
+    }
+
+        IEnumerator CloseAfterDelay(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            if (miniGameController != null)
+            {
+                miniGameController.Close();
+                Debug.Log("PlayerTrioController: mini-game closed after delay.");
+            }
+        }
 
     public void SetHeldChars(string s)
     {
         if (string.IsNullOrEmpty(s)) s = "   ";
         for (int i = 0; i < 3; i++) heldChars[i] = (i < s.Length) ? s[i] : '\0';
         RefreshOverlayVisuals();
+        Debug.Log($"PlayerTrioController: SetHeldChars -> '{GetHeldString()}'");
+        CheckForSuccess();
     }
 
+    // ------ public controls for starting/stopping the mini-game timer ------
+
+    public void StartMiniGame()
+    {
+        if (miniGameRunning)
+        {
+            Debug.Log("PlayerTrioController: StartMiniGame called but already running.");
+            return;
+        }
+
+        timeRemaining = Mathf.Max(0f, timeLimitSeconds);
+        miniGameRunning = true;
+        if (timerCoroutine != null) StopCoroutine(timerCoroutine);
+        timerCoroutine = StartCoroutine(TimerRoutine());
+        Debug.Log($"PlayerTrioController: StartMiniGame -> timer started {timeRemaining:F2}s");
+    }
+
+    public void StopMiniGame()
+    {
+        if (!miniGameRunning)
+        {
+            Debug.Log("PlayerTrioController: StopMiniGame called but not running.");
+            return;
+        }
+        miniGameRunning = false;
+        if (timerCoroutine != null) { StopCoroutine(timerCoroutine); timerCoroutine = null; }
+        Debug.Log("PlayerTrioController: StopMiniGame -> timer stopped and input disabled.");
+    }
+
+    public void ResetMiniGameTimer()
+    {
+        if (timerCoroutine != null) { StopCoroutine(timerCoroutine); timerCoroutine = null; }
+        miniGameRunning = false;
+        timeRemaining = timeLimitSeconds;
+        Debug.Log("PlayerTrioController: ResetMiniGameTimer -> timer reset and not running.");
+    }
+
+    // rest of overlay helpers (unchanged)
     void ApplyOverlayAt(int row, int colStart)
     {
         RestoreLastBackgrounds();
@@ -164,14 +371,12 @@ public class PlayerTrioController : MonoBehaviour
             lastOverlayCells[i] = cell;
             if (cell == null) continue;
 
-            // salva cor atual do background
             if (cell.background != null)
             {
                 savedBgColors[i] = cell.background.color;
-                cell.background.color = playerBackgroundColor; // aplica cor do inspector (alpha já em 1)
+                cell.background.color = playerBackgroundColor;
             }
 
-            // salva e aplica cor do texto via label
             if (cell.label != null)
             {
                 savedTextColors[i] = cell.label.color;
@@ -184,6 +389,7 @@ public class PlayerTrioController : MonoBehaviour
 
         RefreshOverlayVisuals();
         if (gridManager != null) gridManager.UpdatePlayerColumn(row, colStart);
+        CheckForSuccess();
     }
 
     void ClearOverlayAt(int row, int colStart)
@@ -253,7 +459,6 @@ public class PlayerTrioController : MonoBehaviour
             if (slotCell == null) continue;
             slotCell.SetOverlayChar(heldChars[i]);
 
-            // copia background do trio fixo para os slots, mas depois aplica a cor do jogador
             Cell[] fixedTrio = gridManager.GetFixedTrioCells();
             if (fixedTrio != null && fixedTrio.Length >= 3 && fixedTrio[i] != null)
             {
@@ -265,14 +470,12 @@ public class PlayerTrioController : MonoBehaviour
                 }
             }
 
-            // aplica cor do jogador nos slots (preview)
             if (slotCell.background != null)
                 slotCell.background.color = playerBackgroundColor;
 
             if (slotCell.label != null)
             {
                 slotCell.label.color = playerTextColor;
-                // exibe held char no slot (preview)
                 slotCell.SetOverlayChar(heldChars[i]);
             }
         }
@@ -289,4 +492,6 @@ public class PlayerTrioController : MonoBehaviour
             if (gridManager != null) gridManager.UpdatePlayerColumn(curRow, curColStart);
         }
     }
+
+    string GetHeldString() => new string(heldChars);
 }

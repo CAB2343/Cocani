@@ -1,3 +1,4 @@
+// GridManager.cs (modificado: MiniGameFail aceita cells específicos e adiciona debugs)
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,8 +12,10 @@ public class GridManager : MonoBehaviour
     public RectTransform container;
 
     [Header("Player column (visual)")]
-    public RectTransform playerColumnContainer; // assign no Inspector (coluna acima do grid)
+    public RectTransform playerColumnContainer;
     public bool showPlayerColumn = true;
+    [Tooltip("Cor do texto exibido na coluna do jogador (override)")]
+    public Color playerColumnTextColor = Color.white;
 
     [Header("Grid")]
     public int rows = 10;
@@ -30,9 +33,15 @@ public class GridManager : MonoBehaviour
     public int fixedRow = 4;
     public int fixedColStart = 5;
 
+    [Header("Restrictions")]
+    public int reservedLeftColumns = 3;
+
     [Header("Runtime dynamics")]
     public bool respawnFixedTrio = false;
     public float respawnInterval = 8f;
+
+    [Header("Failure reset")]
+    public float failureResetDelay = 1.0f;
 
     public UnityEvent onTrioChanged;
     public UnityEvent onGridReady;
@@ -43,13 +52,13 @@ public class GridManager : MonoBehaviour
     private Coroutine respawnCoroutine;
     private GridLayoutGroup gridLayout;
 
-    // player column internals
     private Cell[] playerColumnCells = new Cell[3];
+
+    private bool miniGameLocked = false;
 
     void Start()
     {
         if (!Application.isPlaying) return;
-
         if (cellPrefab == null || container == null)
         {
             Debug.LogError("GridManager: atribua cellPrefab e container no Inspector.");
@@ -60,20 +69,19 @@ public class GridManager : MonoBehaviour
         rows = Mathf.Max(1, rows);
         cols = Mathf.Max(3, cols);
 
+        reservedLeftColumns = Mathf.Clamp(reservedLeftColumns, 0, Mathf.Max(0, cols - 3));
         fixedRow = Mathf.Clamp(fixedRow, 0, rows - 1);
-        fixedColStart = Mathf.Clamp(fixedColStart, 0, cols - 3);
+        fixedColStart = Mathf.Clamp(fixedColStart, reservedLeftColumns, cols - 3);
 
         if (randomizeOnStart) PickRandomFixedTrio();
 
         PrepareLayout();
         GenerateGrid();
 
-        // inicializa coluna do jogador (visual)
         if (showPlayerColumn)
             InitPlayerColumn();
 
         shuffleCoroutine = StartCoroutine(ShuffleRoutine());
-
         if (respawnFixedTrio)
             respawnCoroutine = StartCoroutine(RespawnTrioRoutine());
     }
@@ -97,6 +105,7 @@ public class GridManager : MonoBehaviour
 
     void GenerateGrid()
     {
+        miniGameLocked = false;
         grid = new Cell[rows, cols];
 
         for (int i = container.childCount - 1; i >= 0; i--)
@@ -149,25 +158,28 @@ public class GridManager : MonoBehaviour
         Canvas.ForceUpdateCanvases();
         UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(container);
 
-        // inicializa/atualiza a coluna do jogador depois do grid criado
         if (showPlayerColumn)
             InitPlayerColumn();
 
         onGridReady?.Invoke();
+        Debug.Log("GridManager: Grid gerado e onGridReady invocado.");
     }
 
     IEnumerator ShuffleRoutine()
     {
         while (true)
         {
-            for (int r = 0; r < rows; r++)
+            if (!miniGameLocked)
             {
-                for (int c = 0; c < cols; c++)
+                for (int r = 0; r < rows; r++)
                 {
-                    var cell = grid[r, c];
-                    if (cell == null) continue;
-                    if (!cell.isStatic)
-                        cell.SetChar(RandomChar());
+                    for (int c = 0; c < cols; c++)
+                    {
+                        var cell = grid[r, c];
+                        if (cell == null) continue;
+                        if (!cell.isStatic)
+                            cell.SetChar(RandomChar());
+                    }
                 }
             }
             yield return new WaitForSeconds(shuffleInterval);
@@ -179,15 +191,20 @@ public class GridManager : MonoBehaviour
         while (true)
         {
             yield return new WaitForSeconds(respawnInterval);
-            PickRandomFixedTrio();
-            ApplyFixedTrioToGrid();
+            if (!miniGameLocked)
+            {
+                PickRandomFixedTrio();
+                ApplyFixedTrioToGrid();
+                Debug.Log("GridManager: RespawnFixedTrio aplicado.");
+            }
         }
     }
 
     void PickRandomFixedTrio()
     {
+        int minCol = Mathf.Clamp(reservedLeftColumns, 0, cols - 3);
         fixedRow = Random.Range(0, rows);
-        fixedColStart = Random.Range(0, cols - 2);
+        fixedColStart = Random.Range(minCol, cols - 2);
 
         target = "";
         string charset = includeNumbers ? "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ" : "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -196,11 +213,15 @@ public class GridManager : MonoBehaviour
             int idx = Random.Range(0, charset.Length);
             target += charset[idx];
         }
+
+        Debug.Log($"GridManager: PickRandomFixedTrio -> row {fixedRow} colStart {fixedColStart} target {target}");
     }
 
     void ApplyFixedTrioToGrid()
     {
         if (grid == null) return;
+
+        fixedColStart = Mathf.Clamp(fixedColStart, Mathf.Clamp(reservedLeftColumns, 0, cols - 3), cols - 3);
 
         for (int r = 0; r < rows; r++)
         {
@@ -228,6 +249,7 @@ public class GridManager : MonoBehaviour
 
         Canvas.ForceUpdateCanvases();
         UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(container);
+        Debug.Log($"GridManager: ApplyFixedTrioToGrid -> fixedRow {fixedRow} fixedColStart {fixedColStart} target {target}");
     }
 
     char RandomChar()
@@ -240,7 +262,8 @@ public class GridManager : MonoBehaviour
     public void SetFixedTrio(int row, int colStart, string newTarget)
     {
         fixedRow = Mathf.Clamp(row, 0, rows - 1);
-        fixedColStart = Mathf.Clamp(colStart, 0, cols - 3);
+        int minCol = Mathf.Clamp(reservedLeftColumns, 0, cols - 3);
+        fixedColStart = Mathf.Clamp(colStart, minCol, cols - 3);
         if (!string.IsNullOrEmpty(newTarget) && newTarget.Length == 3) target = newTarget;
         ApplyFixedTrioToGrid();
     }
@@ -321,9 +344,8 @@ public class GridManager : MonoBehaviour
     void InitPlayerColumn()
     {
         if (playerColumnContainer == null || cellPrefab == null) return;
-        if (playerColumnCells[0] != null) return; // já inicializado
+        if (playerColumnCells[0] != null) return;
 
-        // respeita layout existente
         var existingGrid = playerColumnContainer.GetComponent<GridLayoutGroup>();
         var existingHor = playerColumnContainer.GetComponent<HorizontalLayoutGroup>();
 
@@ -352,7 +374,6 @@ public class GridManager : MonoBehaviour
             grid.startAxis = GridLayoutGroup.Axis.Horizontal;
         }
 
-        // limpa filhos e cria 3 células
         for (int i = playerColumnContainer.childCount - 1; i >= 0; i--)
             Destroy(playerColumnContainer.GetChild(i).gameObject);
 
@@ -365,12 +386,6 @@ public class GridManager : MonoBehaviour
         }
     }
 
-
-
-    /// <summary>
-    /// Copia visual das 3 células alvo para a coluna do jogador.
-    /// Se row < 0 => limpa/oculta.
-    /// </summary>
     public void UpdatePlayerColumn(int row, int colStart)
     {
         if (!showPlayerColumn) return;
@@ -381,8 +396,12 @@ public class GridManager : MonoBehaviour
         {
             for (int i = 0; i < 3; i++)
             {
-                if (playerColumnCells[i] != null)
-                    playerColumnCells[i].Clear();
+                var dst = playerColumnCells[i];
+                if (dst != null)
+                {
+                    dst.Clear();
+                    if (dst.label != null) dst.label.color = playerColumnTextColor;
+                }
             }
             return;
         }
@@ -397,11 +416,117 @@ public class GridManager : MonoBehaviour
             if (src == null)
             {
                 dst.Clear();
+                if (dst.label != null) dst.label.color = playerColumnTextColor;
                 continue;
             }
 
-            // copia visual sem alterar estado do grid
             dst.CopyFrom(src);
+
+            if (dst.label != null)
+                dst.label.color = playerColumnTextColor;
         }
+    }
+
+    // ---- mini-game end handling ----
+
+    /// <summary>
+    /// Sucesso: pinta o trio fixo e a coluna do jogador e bloqueia atualizações.
+    /// </summary>
+    public void MiniGameSuccess(Color successColor)
+    {
+        if (miniGameLocked) return;
+        miniGameLocked = true;
+
+        StopShuffle();
+        StopRespawn();
+
+        Debug.Log($"GridManager: MiniGameSuccess -> painting trio cells and player column with color {successColor}");
+
+        for (int i = 0; i < 3; i++)
+        {
+            if (fixedTrioCells[i] != null && fixedTrioCells[i].background != null)
+            {
+                fixedTrioCells[i].background.color = successColor;
+                Debug.Log($"  Success painted fixed cell [{fixedTrioCells[i].row},{fixedTrioCells[i].col}]");
+            }
+
+            if (playerColumnCells[i] != null && playerColumnCells[i].background != null)
+            {
+                playerColumnCells[i].background.color = successColor;
+                Debug.Log($"  Success painted player column cell index {i}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Fracasso: pinta apenas cellsToColor se fornecido. Caso contrário pinta todas.
+    /// Bloqueia atualizações e reinicia após resetDelay.
+    /// </summary>
+    public void MiniGameFail(Color failureColor, float resetDelay, Cell[] cellsToColor = null)
+    {
+        if (miniGameLocked) return;
+        miniGameLocked = true;
+
+        StopShuffle();
+        StopRespawn();
+
+        if (cellsToColor != null && cellsToColor.Length > 0)
+        {
+            Debug.Log($"GridManager: MiniGameFail -> painting {cellsToColor.Length} provided cells with color {failureColor}");
+            foreach (var cell in cellsToColor)
+            {
+                if (cell != null && cell.background != null)
+                {
+                    cell.background.color = failureColor;
+                    Debug.Log($"  Failure painted cell [{cell.row},{cell.col}]");
+                }
+            }
+        }
+        else
+        {
+            Debug.Log($"GridManager: MiniGameFail -> painting ALL cells with color {failureColor}");
+            if (grid != null)
+            {
+                for (int r = 0; r < rows; r++)
+                    for (int c = 0; c < cols; c++)
+                        if (grid[r, c] != null && grid[r, c].background != null)
+                            grid[r, c].background.color = failureColor;
+            }
+        }
+
+        StartCoroutine(FailureResetCoroutine(resetDelay));
+    }
+
+    IEnumerator FailureResetCoroutine(float delay)
+    {
+        Debug.Log($"GridManager: Failure reset in {delay} seconds.");
+        yield return new WaitForSeconds(delay);
+        ResetMiniGame();
+    }
+
+    public void ResetMiniGame()
+    {
+        Debug.Log("GridManager: ResetMiniGame called. Regenerating grid.");
+        if (shuffleCoroutine != null) { StopCoroutine(shuffleCoroutine); shuffleCoroutine = null; }
+        if (respawnCoroutine != null) { StopCoroutine(respawnCoroutine); respawnCoroutine = null; }
+
+        GenerateGrid();
+
+        if (shuffleCoroutine == null) shuffleCoroutine = StartCoroutine(ShuffleRoutine());
+        if (respawnFixedTrio && respawnCoroutine == null) respawnCoroutine = StartCoroutine(RespawnTrioRoutine());
+    }
+
+    void StopRespawn()
+    {
+        if (respawnCoroutine != null)
+        {
+            StopCoroutine(respawnCoroutine);
+            respawnCoroutine = null;
+        }
+    }
+
+    public void MiniGameFail(Color failureColor, float resetDelay)
+    {
+    MiniGameFail(failureColor, resetDelay, null);
     }
 }
