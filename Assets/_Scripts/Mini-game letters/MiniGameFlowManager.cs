@@ -2,19 +2,22 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// Orquestra o fluxo do mini-game: Start, Success, Fail, Close, Reset.
-/// Mantém delays e chama GridManager / MiniGameController / PlayerTrioController.
+/// Orquestra Start, Success, Fail, Close, Reset.
+/// Mostra derrota visível por 'failVisibleDelay' antes de fechar e resetar.
 /// </summary>
 public class MiniGameFlowManager : MonoBehaviour
 {
     [Header("Refs")]
     public GridManager gridManager;
-    public MiniGameController miniGameController; // controla UI open/close
-    public PlayerTrioController playerTrio;       // pra obter estado e slots
+    public MiniGameController miniGameController;
+    public PlayerTrioController playerTrio;
+    public MiniGameImageSwitcher imageSwitcher;
 
     [Header("Delays")]
     public float successCloseDelay = 3f;
     public float failCloseDelay = 3f;
+    [Tooltip("Quanto tempo a derrota fica visível antes de fechar a UI.")]
+    public float failVisibleDelay = 2f;
 
     [Header("Result colors")]
     public Color successColor = Color.green;
@@ -26,39 +29,46 @@ public class MiniGameFlowManager : MonoBehaviour
 
     bool flowLocked = false;
 
-    // chama quando abrir mini-game
     public void StartMiniGame()
     {
         if (flowLocked) return;
         Debug.Log("MiniGameFlowManager: StartMiniGame");
-        if (gridManager != null) gridManager.ResetMiniGame(); // garante grid limpo
+        if (gridManager != null) gridManager.ResetMiniGame();
+
+        if (imageSwitcher != null) imageSwitcher.OnStartImmediate();
+
         if (playerTrio != null) playerTrio.ResetMiniGameTimer();
         if (playerTrio != null) playerTrio.StartMiniGame();
     }
 
-    // PlayerTrio chama isso ao detectar sucesso
     public void OnPlayerSuccess()
     {
         if (flowLocked) return;
         flowLocked = true;
         Debug.Log("MiniGameFlowManager: OnPlayerSuccess");
-        // pinta trio fixo + coluna do jogador via GridManager (keeps centralized)
+
         if (gridManager != null) gridManager.MiniGameSuccess(successColor);
 
-        // também pinta controlled cells and slots for immediate visual
-        PaintPlayerControlledCells(successColor);
+        if (imageSwitcher != null) imageSwitcher.OnSuccessImmediate();
 
+        PaintPlayerControlledCells(successColor);
         StartCoroutine(SuccessEndSequence());
     }
 
-    // PlayerTrio calls this on timeout/fail
     public void OnPlayerFail()
     {
         if (flowLocked) return;
         flowLocked = true;
         Debug.Log("MiniGameFlowManager: OnPlayerFail");
 
-        // determine which cells to color
+        // show defeat visual immediately
+        if (imageSwitcher != null)
+        {
+            imageSwitcher.OnFailImmediate();
+            Debug.Log("MiniGameFlowManager: imageSwitcher.OnFailImmediate() called.");
+        }
+
+        // determine controlled cells
         Cell[] controlled = null;
         if (playerTrio != null && playerTrio.curRow >= 0)
         {
@@ -67,25 +77,45 @@ public class MiniGameFlowManager : MonoBehaviour
                 controlled[i] = gridManager?.GetCell(playerTrio.curRow, playerTrio.curColStart + i);
         }
 
+        // ensure grid's resetDelay is at least as long as the visible delay
+        float targetResetDelay = (gridManager != null) ? Mathf.Max(gridManager.failureResetDelay, failVisibleDelay + 0.1f) : failVisibleDelay + 0.1f;
+
         if (gridManager != null)
         {
             if (failPaintOnlyControlled)
-                gridManager.MiniGameFail(failColor, gridManager.failureResetDelay, controlled);
+                gridManager.MiniGameFail(failColor, targetResetDelay, controlled);
             else
-                gridManager.MiniGameFail(failColor, gridManager.failureResetDelay, null);
+                gridManager.MiniGameFail(failColor, targetResetDelay, null);
         }
 
         // immediate feedback on player slots
         PaintPlayerSlots(failColor);
 
-        StartCoroutine(FailEndSequence());
+        // wait visible delay, then close UI, then unlock after reset completes
+        StartCoroutine(FailSequenceVisible(targetResetDelay));
+    }
+
+    IEnumerator FailSequenceVisible(float gridResetDelay)
+    {
+        // show defeat for this time
+        yield return new WaitForSeconds(failVisibleDelay);
+
+        if (miniGameController != null)
+        {
+            miniGameController.Close();
+            Debug.Log("MiniGameFlowManager: miniGameController.Close() called after visible fail delay.");
+        }
+
+        // unlock after grid reset finishes
+        yield return new WaitForSeconds(gridResetDelay + 0.05f - failVisibleDelay);
+        flowLocked = false;
+        Debug.Log("MiniGameFlowManager: flow unlocked after fail/reset.");
     }
 
     IEnumerator SuccessEndSequence()
     {
         yield return new WaitForSeconds(successCloseDelay);
 
-        // depois do delay fecha UI e força reset para novo mini-game
         if (miniGameController != null) miniGameController.Close();
         Debug.Log("MiniGameFlowManager: Closed UI after success delay.");
 
@@ -94,20 +124,6 @@ public class MiniGameFlowManager : MonoBehaviour
             gridManager.ResetMiniGame();
             Debug.Log("MiniGameFlowManager: Grid reset after success.");
         }
-
-        flowLocked = false;
-    }
-
-    IEnumerator FailEndSequence()
-    {
-        yield return new WaitForSeconds(failCloseDelay);
-
-        if (miniGameController != null) miniGameController.Close();
-        Debug.Log("MiniGameFlowManager: Closed UI after fail delay.");
-
-        // GridManager already schedules reset after failureResetDelay.
-        // Optionally force immediate reset:
-        // if (gridManager != null) gridManager.ResetMiniGame();
 
         flowLocked = false;
     }
