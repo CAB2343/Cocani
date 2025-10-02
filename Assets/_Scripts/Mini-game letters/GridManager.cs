@@ -1,4 +1,3 @@
-// GridManager.cs (modificado: MiniGameFail aceita cells específicos e adiciona debugs)
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -141,7 +140,10 @@ public class GridManager : MonoBehaviour
                 {
                     cell.isStatic = true;
                     int idx = c - fixedColStart;
-                    cell.SetChar(target[idx]);
+                    if (!string.IsNullOrEmpty(target) && target.Length > idx)
+                        cell.SetChar(target[idx]);
+                    else
+                        cell.SetChar(RandomChar());
                     fixedTrioCells[idx] = cell;
                 }
                 else
@@ -160,6 +162,10 @@ public class GridManager : MonoBehaviour
 
         if (showPlayerColumn)
             InitPlayerColumn();
+
+        // sincroniza a coluna do jogador com o trio fixo imediatamente
+        if (showPlayerColumn)
+            UpdatePlayerColumn(fixedRow, fixedColStart);
 
         onGridReady?.Invoke();
         Debug.Log("GridManager: Grid gerado e onGridReady invocado.");
@@ -344,8 +350,7 @@ public class GridManager : MonoBehaviour
     void InitPlayerColumn()
     {
         if (playerColumnContainer == null || cellPrefab == null) return;
-        if (playerColumnCells[0] != null) return;
-
+        // always recreate player column cells if container changed
         var existingGrid = playerColumnContainer.GetComponent<GridLayoutGroup>();
         var existingHor = playerColumnContainer.GetComponent<HorizontalLayoutGroup>();
 
@@ -504,16 +509,68 @@ public class GridManager : MonoBehaviour
         ResetMiniGame();
     }
 
+    /// <summary>
+    /// Full reset: para coroutines, escolhe novo trio/posição, regenera todo o grid,
+    /// re-inicializa a coluna do jogador e reinicia os loops (shuffle/respawn).
+    /// Use este método quando quiser garantir um mini-game totalmente novo.
+    /// </summary>
     public void ResetMiniGame()
     {
-        Debug.Log("GridManager: ResetMiniGame called. Regenerating grid.");
+        Debug.Log("GridManager: Full ResetMiniGame starting...");
+
+        // desbloqueia estado
+        miniGameLocked = false;
+
+        // para coroutines existentes
         if (shuffleCoroutine != null) { StopCoroutine(shuffleCoroutine); shuffleCoroutine = null; }
         if (respawnCoroutine != null) { StopCoroutine(respawnCoroutine); respawnCoroutine = null; }
 
+        // limpa arrays e referências antigas
+        fixedTrioCells = new Cell[3];
+        playerColumnCells = new Cell[3];
+
+        // remove filhos atuais do container (garante limpeza completa)
+        if (container != null)
+        {
+            for (int i = container.childCount - 1; i >= 0; i--)
+            {
+                var child = container.GetChild(i).gameObject;
+                if (Application.isPlaying) Destroy(child);
+                else DestroyImmediate(child);
+            }
+        }
+
+        // garante valores válidos e sorteia novo trio/posição
+        rows = Mathf.Max(1, rows);
+        cols = Mathf.Max(3, cols);
+        reservedLeftColumns = Mathf.Clamp(reservedLeftColumns, 0, Mathf.Max(0, cols - 3));
+        fixedRow = Mathf.Clamp(fixedRow, 0, rows - 1);
+
+        // força nova escolha aleatória do trio e posição (sempre novo)
+        PickRandomFixedTrio();
+
+        // (re)gera o grid usando o novo fixedRow/fixedColStart/target
         GenerateGrid();
 
+        // notifica listeners que o trio mudou
+        onTrioChanged?.Invoke();
+
+        // (re)inicia a coluna do jogador caso esteja visível e sincroniza com trio fixo
+        if (showPlayerColumn)
+        {
+            InitPlayerColumn();
+            UpdatePlayerColumn(fixedRow, fixedColStart);
+        }
+
+        // força rebuild visual
+        Canvas.ForceUpdateCanvases();
+        if (container != null) UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(container);
+
+        // reinicia coroutines
         if (shuffleCoroutine == null) shuffleCoroutine = StartCoroutine(ShuffleRoutine());
         if (respawnFixedTrio && respawnCoroutine == null) respawnCoroutine = StartCoroutine(RespawnTrioRoutine());
+
+        Debug.Log("GridManager: Full ResetMiniGame completed.");
     }
 
     void StopRespawn()
@@ -527,6 +584,6 @@ public class GridManager : MonoBehaviour
 
     public void MiniGameFail(Color failureColor, float resetDelay)
     {
-    MiniGameFail(failureColor, resetDelay, null);
+        MiniGameFail(failureColor, resetDelay, null);
     }
 }
