@@ -55,6 +55,44 @@ public class GridManager : MonoBehaviour
 
     private bool miniGameLocked = false;
 
+void Awake()
+{
+
+    if (container == null)
+    {
+        container = GetComponent<RectTransform>();
+
+        if (container == null)
+        {
+            var go = new GameObject("GridContainer", typeof(RectTransform));
+            go.transform.SetParent(transform, false);
+            container = go.GetComponent<RectTransform>();
+        }
+    }
+
+
+    if (cellPrefab == null)
+    {
+        // tenta achar prefab por tag
+        var go = GameObject.FindGameObjectWithTag("CellPrefab");
+        if (go != null) cellPrefab = go;
+
+        // tenta carregar de Resources (Assets/Resources/Cell.prefab)
+        if (cellPrefab == null)
+            cellPrefab = Resources.Load<GameObject>("Cell");
+
+        // último caso: cria um quadradinho simples
+        if (cellPrefab == null)
+        {
+            cellPrefab = new GameObject("AutoCell", typeof(RectTransform), typeof(Image), typeof(Cell));
+            var img = cellPrefab.GetComponent<Image>();
+            img.color = Color.gray;
+        }
+    }
+}
+
+
+
     void Start()
     {
         if (!Application.isPlaying) return;
@@ -84,6 +122,9 @@ public class GridManager : MonoBehaviour
         if (respawnFixedTrio)
             respawnCoroutine = StartCoroutine(RespawnTrioRoutine());
     }
+
+
+
 
     void OnDisable()
     {
