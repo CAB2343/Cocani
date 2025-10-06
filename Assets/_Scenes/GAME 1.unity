@@ -679,7 +679,8 @@ PrefabInstance:
       value: SALA_OXIGENIO
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 3972848171524390241, guid: ce154edece0b4f641a70f4f6f9abb0c8, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ce154edece0b4f641a70f4f6f9abb0c8, type: 3}
