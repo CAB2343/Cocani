@@ -5,7 +5,7 @@ public class ProceduralRoomPointGenerator : MonoBehaviour
 {
     public Vector3 localOffset = Vector3.forward;
     public List<GameObject> RoomPrefabs = new List<GameObject>();
-    public GameObject WallPrefab; 
+    public GameObject WallPrefab;
 
     [SerializeField] private GameObject creator;
     [SerializeField] private GameObject created;
@@ -22,27 +22,31 @@ public class ProceduralRoomPointGenerator : MonoBehaviour
             generatorManager = FindObjectOfType<ProceduralGeneratorManager>();
 
         if (generatorManager != null)
+        {
             generatorManager.RegisterRoom();
+            generatorManager.RegisterPoint(this); // ✅ agora só roda se o manager existe
+        }
     }
 
     void Start()
     {
         if (RoomPrefabs.Count == 0) return;
-        if (!generatorManager.CanCreateRoom()) return;
 
         Vector3 spawnPos = transform.TransformPoint(localOffset);
         Vector3 worldDirection = transform.TransformDirection(localOffset).normalized;
+        Quaternion lookRotation = Quaternion.LookRotation(worldDirection, Vector3.up);
 
-        bool spawned = false;
-
+        if (!generatorManager.CanCreateRoom())
+        {
+            // Não gera parede agora, apenas marca como não criado
+            return;
+        }
 
         List<GameObject> shuffledPrefabs = new List<GameObject>(RoomPrefabs);
         ShuffleList(shuffledPrefabs);
 
         foreach (GameObject prefab in shuffledPrefabs)
         {
-            Quaternion lookRotation = Quaternion.LookRotation(worldDirection, Vector3.up);
-
             Debug.Log($"{name} tentando instanciar {prefab.name} em {spawnPos}");
 
             if (CanPlaceRoom(spawnPos, lookRotation, prefab))
@@ -50,35 +54,34 @@ public class ProceduralRoomPointGenerator : MonoBehaviour
                 GameObject newRoom = Instantiate(prefab, spawnPos, lookRotation);
 
                 ProceduralRoomPointGenerator newRoomGenerator = newRoom.GetComponentInChildren<ProceduralRoomPointGenerator>();
-                if (newRoomGenerator == null)
-                {
-                    Debug.LogWarning($"{newRoom.name} não tem ProceduralRoomPointGenerator!");
-                }
-                else
+                if (newRoomGenerator != null)
                 {
                     newRoomGenerator.Creator = this.gameObject;
                     this.Created = newRoom;
+
                     Debug.Log($"{name} criou {newRoom.name}");
                     Debug.Log($"{newRoom.name} foi criado por {newRoomGenerator.Creator.name}");
                 }
+                else
+                {
+                    Debug.LogWarning($"{newRoom.name} não tem ProceduralRoomPointGenerator!");
+                }
 
-                spawned = true;
-                break; 
+                break; // criou uma sala, então para
             }
         }
+    }
 
-        
-        if (!spawned)
+    public void TryFinalize()
+    {
+        // Só fecha se não criou sala
+        if (Created == null && WallPrefab != null)
         {
-            if (WallPrefab != null)
-            {
-                Quaternion wallRotation = Quaternion.LookRotation(worldDirection, Vector3.up);
-                Instantiate(WallPrefab, spawnPos, wallRotation, transform.parent);
-            }
-            else
-            {
-                Debug.Log($"{name} não conseguiu instanciar nenhuma sala e não há WallPrefab configurado.");
-            }
+            Vector3 spawnPos = transform.TransformPoint(localOffset);
+            Vector3 worldDirection = transform.TransformDirection(localOffset).normalized;
+            Quaternion rotation = Quaternion.LookRotation(worldDirection, Vector3.up);
+
+            Instantiate(WallPrefab, spawnPos, rotation, transform.parent);
         }
     }
 
@@ -87,9 +90,7 @@ public class ProceduralRoomPointGenerator : MonoBehaviour
         Bounds prefabBounds = GetPrefabBounds(prefab);
 
         if (prefabBounds.size == Vector3.zero)
-        {
             return false;
-        }
 
         Vector3 halfExtents = prefabBounds.extents;
         Vector3 center = spawnPos + rotation * prefabBounds.center;
@@ -98,7 +99,7 @@ public class ProceduralRoomPointGenerator : MonoBehaviour
 
         foreach (Collider col in hits)
         {
-            if (col.transform.root == transform.root) 
+            if (col.transform.root == transform.root)
                 continue;
 
             Debug.Log($"{name} não pode instanciar {prefab.name}, colisão com {col.name}");

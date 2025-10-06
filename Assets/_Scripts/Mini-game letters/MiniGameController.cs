@@ -4,7 +4,10 @@ using Cinemachine;
 
 public class MiniGameController : MonoBehaviour
 {
+    [Header("UI")]
     public GameObject miniGameUI;
+
+    [Header("Player Root")]
     public PlayerController1 playerRoot;
     public bool disablePlayerRootOnOpen = true;
 
@@ -16,9 +19,9 @@ public class MiniGameController : MonoBehaviour
     public CinemachineBrain cinemachineBrain;
 
     [Header("Mini-game hooks")]
-    public PlayerTrioController playerTrio; // referência para controlar timer/start/stop
-    public GridManager gridManager;         // referência para reset do grid
-    public bool resetGridOnOpen = true;     // se true, chama gridManager.ResetMiniGame() antes de abrir
+    public PlayerTrioController playerTrio; // controla timer/start/stop
+    public GridManager gridManager;         // reset do grid
+    public bool resetGridOnOpen = true;
 
     [Header("Debug")]
     public bool exitWithEscForDebug = true;
@@ -30,6 +33,31 @@ public class MiniGameController : MonoBehaviour
     bool[] vcamPrev;
     bool prevBrainEnabled;
     bool isOpen = false;
+
+    void Awake()
+    {
+        // === AUTO REFERENCES ===
+        if (miniGameUI == null)
+            miniGameUI = GameObject.FindGameObjectWithTag("MiniGameUI");
+
+        if (playerRoot == null)
+            playerRoot = FindObjectOfType<PlayerController1>();
+
+        if ((movementScripts == null || movementScripts.Length == 0) && playerRoot != null)
+            movementScripts = playerRoot.GetComponents<MonoBehaviour>();
+
+        if (virtualCameras == null || virtualCameras.Length == 0)
+            virtualCameras = FindObjectsOfType<CinemachineVirtualCamera>();
+
+        if (cinemachineBrain == null)
+            cinemachineBrain = FindObjectOfType<CinemachineBrain>();
+
+        if (playerTrio == null)
+            playerTrio = FindObjectOfType<PlayerTrioController>();
+
+        if (gridManager == null)
+            gridManager = FindObjectOfType<GridManager>();
+    }
 
     void Start()
     {
@@ -49,18 +77,16 @@ public class MiniGameController : MonoBehaviour
         if (miniGameUI != null)
             miniGameUI.SetActive(true);
 
-        if (isOpen) return; // evita duplo open que sobrescreva estados
+        if (isOpen) return;
 
         Debug.Log("MiniGameController: Open() called.");
 
-        // opcional: garante grid limpo antes de abrir
         if (resetGridOnOpen && gridManager != null)
         {
             Debug.Log("MiniGameController: Resetting grid before opening mini-game.");
             gridManager.ResetMiniGame();
         }
 
-        // inicia mini-game interno (reseta timer e inicia)
         if (playerTrio != null)
         {
             playerTrio.ResetMiniGameTimer();
@@ -78,7 +104,7 @@ public class MiniGameController : MonoBehaviour
             if (disablePlayerRootOnOpen) playerRoot.enabled = false;
         }
 
-        // movement scripts: salve por componente (não sobrescrever se já salvo)
+        // movement scripts
         if (movementScripts != null && movementScripts.Length > 0)
         {
             if (movementPrevMap == null) movementPrevMap = new Dictionary<MonoBehaviour, bool>();
@@ -122,11 +148,10 @@ public class MiniGameController : MonoBehaviour
 
         Debug.Log("MiniGameController: Close() called.");
 
-        // stop mini-game timer and input
         if (playerTrio != null)
         {
             playerTrio.StopMiniGame();
-            playerTrio.ResetMiniGameTimer(); // deixa pronto para próximo Open
+            playerTrio.ResetMiniGameTimer();
             Debug.Log("MiniGameController: PlayerTrio timer stopped and reset.");
         }
 
@@ -136,7 +161,7 @@ public class MiniGameController : MonoBehaviour
         if (playerRoot != null && prevPlayerRootStored)
             playerRoot.enabled = prevPlayerRootEnabled;
 
-        // restore movement scripts from map
+        // restore movement scripts
         if (movementPrevMap != null)
         {
             var keys = new List<MonoBehaviour>(movementPrevMap.Keys);
@@ -166,8 +191,5 @@ public class MiniGameController : MonoBehaviour
             cinemachineBrain.enabled = prevBrainEnabled;
 
         prevPlayerRootStored = false;
-
-        // opcional: reset do grid ao fechar (comente se não quiser)
-        // if (gridManager != null) gridManager.ResetMiniGame();
     }
 }
