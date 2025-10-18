@@ -1,11 +1,11 @@
 using UnityEngine;
-using UnityEngine.UI;
 
 public class MinigameActivator : MonoBehaviour
 {
-    public GameManager gameManager; // Referência ao GameManager
-    public GameObject minigameUI; // Referência ao painel principal do minigame (MinigamePanel)
-    public string playerTag = "Player"; // Tag do seu jogador
+    [Header("Referências")]
+    public GameManager gameManager;          // Referência ao GameManager
+    public GameObject minigameUI;            // Painel principal do minigame
+    public string playerTag = "Player";      // Tag do jogador
 
     private bool playerInRange = false;
 
@@ -23,7 +23,7 @@ public class MinigameActivator : MonoBehaviour
         {
             playerInRange = true;
             Debug.Log("MinigameActivator: Jogador entrou no alcance de interação.");
-            // Opcional: Mostrar um prompt de UI para o jogador (ex: "Pressione E para interagir")
+            // Aqui você pode mostrar um prompt tipo "Pressione E para interagir"
         }
     }
 
@@ -33,11 +33,10 @@ public class MinigameActivator : MonoBehaviour
         {
             playerInRange = false;
             Debug.Log("MinigameActivator: Jogador saiu do alcance de interação.");
-            // Opcional: Esconder o prompt de UI
+            // Aqui você pode esconder o prompt
         }
     }
 
-    // Este método será chamado quando o jogador interagir com este objeto
     public void ActivateMinigame()
     {
         if (gameManager == null)
@@ -47,37 +46,35 @@ public class MinigameActivator : MonoBehaviour
         }
         if (minigameUI == null)
         {
-            Debug.LogError("MinigameActivator: MinigameUI (painel) não atribuído!");
+            Debug.LogError("MinigameActivator: MinigameUI não atribuído!");
             return;
         }
 
-        minigameUI.SetActive(true); // Ativa o painel do minigame
-        gameManager.StartGame(); // Inicia o minigame (que já pausa o jogo principal)
+        minigameUI.SetActive(true);
+        gameManager.StartGame();
 
-        // Opcional: Desativar o movimento do jogador ou outros controles
-        // Ex: FindObjectOfType<PlayerMovement>().enabled = false;
+        // Libera o cursor para o minigame
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        Debug.Log("Minigame ativado!");
     }
 
-    // Este método pode ser chamado para fechar o minigame sem jogar (ex: botão de fechar)
     public void DeactivateMinigame()
     {
-        if (gameManager == null)
+        if (gameManager == null || minigameUI == null)
         {
-            Debug.LogError("MinigameActivator: GameManager não atribuído!");
-            return;
-        }
-        if (minigameUI == null)
-        {
-            Debug.LogError("MinigameActivator: MinigameUI (painel) não atribuído!");
+            Debug.LogError("MinigameActivator: Referências faltando!");
             return;
         }
 
-        minigameUI.SetActive(false); // Desativa o painel do minigame
-        gameManager.UnpauseGame(); // Despausa o jogo principal
+        minigameUI.SetActive(false);
+        gameManager.UnpauseGame();
 
-        // Opcional: Reativar o movimento do jogador ou outros controles
-        // Ex: FindObjectOfType<PlayerMovement>().enabled = true;
+        // Trava o cursor novamente para o jogo principal
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
+        Debug.Log("Minigame desativado!");
     }
 }
-
-

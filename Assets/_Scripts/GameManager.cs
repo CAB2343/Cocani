@@ -15,11 +15,11 @@ public class GameManager : MonoBehaviour
     public Button restartButton;
 
     [Header("Game Settings")]
-    public GameObject dustParticlePrefab;
-    public float gameDuration = 60f; // Seconds
-    public float particleLifetime = 2.5f; // Seconds
-    public float particleSpawnRate = 0.75f; // Seconds between spawns
-    public Vector2 particleSizeRange = new Vector2(25f, 45f); // Min and Max size
+    public GameObject dustParticlePrefab; // prefab deve ter Image (raycast target ON) — Button opcional
+    public float gameDuration = 60f;
+    public float particleLifetime = 2.5f;
+    public float particleSpawnRate = 0.75f;
+    public Vector2 particleSizeRange = new Vector2(25f, 45f);
 
     private int score = 0;
     private float currentTime = 0f;
@@ -27,23 +27,23 @@ public class GameManager : MonoBehaviour
     private List<GameObject> activeParticles = new List<GameObject>();
 
     [Header("Minigame Panel")]
-    public GameObject minigamePanel; // Referência ao painel principal do minigame
+    public GameObject minigamePanel;
 
     void Start()
     {
-        gameOverPanel.SetActive(false);
-        startButton.onClick.AddListener(StartGame);
-        restartButton.onClick.AddListener(RestartGame);
+        if (gameOverPanel != null) gameOverPanel.SetActive(false);
+        if (startButton != null) startButton.onClick.AddListener(StartGame);
+        if (restartButton != null) restartButton.onClick.AddListener(RestartGame);
+
         UpdateUI();
-        // UnpauseGame() não é mais chamado aqui, será controlado externamente
-        minigamePanel.SetActive(false); // Garante que o minigame esteja desativado no início
+        if (minigamePanel != null) minigamePanel.SetActive(false);
     }
 
     void Update()
     {
         if (isGameRunning)
         {
-            currentTime -= Time.deltaTime;
+            currentTime -= Time.unscaledDeltaTime;
             if (currentTime <= 0)
             {
                 currentTime = 0;
@@ -55,8 +55,8 @@ public class GameManager : MonoBehaviour
 
     void UpdateUI()
     {
-        scoreText.text = score.ToString();
-        timerText.text = Mathf.CeilToInt(currentTime).ToString() + "s";
+        if (scoreText != null) scoreText.text = score.ToString();
+        if (timerText != null) timerText.text = Mathf.CeilToInt(currentTime) + "s";
     }
 
     public void StartGame()
@@ -65,50 +65,77 @@ public class GameManager : MonoBehaviour
         score = 0;
         currentTime = gameDuration;
         isGameRunning = true;
-        startButton.gameObject.SetActive(false);
-        gameOverPanel.SetActive(false);
+
+        if (startButton != null) startButton.gameObject.SetActive(false);
+        if (gameOverPanel != null) gameOverPanel.SetActive(false);
         ClearParticles();
         UpdateUI();
-        PauseGame(); // Pause the main game
-        minigamePanel.SetActive(true); // Ativa o painel do minigame
-        Debug.Log("GameManager: MinigamePanel ativado!");
+
+        PauseGame();
+        if (minigamePanel != null) minigamePanel.SetActive(true);
+
+        // Cursor liberado
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
 
         StartCoroutine(SpawnParticlesRoutine());
+
+        Canvas canvas = filterArea.GetComponentInParent<Canvas>();
+        if (canvas != null)
+        {
+        if (canvas.renderMode == RenderMode.WorldSpace)
+        {
+            if (Camera.main != null && Camera.main.GetComponent<PhysicsRaycaster>() == null)
+                Camera.main.gameObject.AddComponent<PhysicsRaycaster>();
+        }
+
+        if (canvas.GetComponent<GraphicRaycaster>() == null)
+            canvas.gameObject.AddComponent<GraphicRaycaster>();
+         }
+        else
+        {
+        Debug.LogError("Nenhum Canvas encontrado como pai de filterArea!");
+        }
+
     }
 
     void EndGame()
     {
         Debug.Log("GameManager: EndGame chamado!");
         isGameRunning = false;
-        StopAllCoroutines(); // Stop spawning particles
+        StopAllCoroutines();
         ClearParticles();
 
-        finalScoreText.text = score.ToString();
-        gameOverPanel.SetActive(true);
-        UnpauseGame(); // Unpause the main game
+        if (finalScoreText != null) finalScoreText.text = score.ToString();
+        if (gameOverPanel != null) gameOverPanel.SetActive(true);
+
+        // Trava cursor
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+
+        UnpauseGame();
     }
 
     public void RestartGame()
     {
         Debug.Log("GameManager: RestartGame chamado!");
-        gameOverPanel.SetActive(false);
-        startButton.gameObject.SetActive(true);
+        if (gameOverPanel != null) gameOverPanel.SetActive(false);
+        if (startButton != null) startButton.gameObject.SetActive(true);
         score = 0;
         currentTime = gameDuration;
         UpdateUI();
-        UnpauseGame(); // Ensure game is unpaused when returning to start screen
     }
 
     public void PauseGame()
     {
         Time.timeScale = 0f;
-        Debug.Log("Game Paused (Time.timeScale = 0)");
+        Debug.Log("Jogo principal pausado (Time.timeScale = 0)");
     }
 
     public void UnpauseGame()
     {
         Time.timeScale = 1f;
-        Debug.Log("Game Unpaused (Time.timeScale = 1)");
+        Debug.Log("Jogo principal despausado (Time.timeScale = 1)");
     }
 
     IEnumerator SpawnParticlesRoutine()
@@ -116,99 +143,125 @@ public class GameManager : MonoBehaviour
         while (isGameRunning)
         {
             SpawnParticle();
-            yield return new WaitForSeconds(particleSpawnRate);
+            yield return new WaitForSecondsRealtime(particleSpawnRate);
         }
     }
 
     void SpawnParticle()
     {
         if (!isGameRunning) return;
-        Debug.Log("GameManager: Tentando spawnar partícula.");
+        if (filterArea == null)
+        {
+            Debug.LogError("[SpawnParticle] filterArea não atribuído!");
+            return;
+        }
+        if (dustParticlePrefab == null)
+        {
+            Debug.LogError("[SpawnParticle] dustParticlePrefab não atribuído!");
+            return;
+        }
 
-        // Instantiate particle
-        GameObject particleGO = Instantiate(dustParticlePrefab, filterArea);
+        // Instancia sem conectar (vai setar parent explicitamente para evitar problemas de escala)
+        GameObject particleGO = Instantiate(dustParticlePrefab);
+        particleGO.name = dustParticlePrefab.name + "_Instance";
+
+        // Força parent no filterArea e mantém escala/posição local correta
+        particleGO.transform.SetParent(filterArea, false);
+
         activeParticles.Add(particleGO);
-        Debug.Log($"GameManager: Partícula {particleGO.name} spawnada em {particleGO.transform.position}.");
 
-        // Set random size
+        RectTransform rect = particleGO.GetComponent<RectTransform>();
+        if (rect == null) rect = particleGO.AddComponent<RectTransform>();
+
         float size = Random.Range(particleSizeRange.x, particleSizeRange.y);
-        RectTransform particleRect = particleGO.GetComponent<RectTransform>();
-        particleRect.sizeDelta = new Vector2(size, size);
+        rect.sizeDelta = new Vector2(size, size);
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
 
-        // Set random position within filterArea
-        float xPos = Random.Range(0, filterArea.rect.width - size);
-        float yPos = Random.Range(0, filterArea.rect.height - size);
-        particleRect.anchoredPosition = new Vector2(xPos, yPos);
+        float halfWidth = (filterArea.rect.width - size) / 2f;
+        float halfHeight = (filterArea.rect.height - size) / 2f;
+        rect.anchoredPosition = new Vector2(
+            Random.Range(-halfWidth, halfWidth),
+            Random.Range(-halfHeight, halfHeight)
+        );
 
-        // Add click listener
-        Image particleImage = particleGO.GetComponent<Image>();
-        if (particleImage == null)
-        {
-            particleImage = particleGO.AddComponent<Image>();
-        }
-        particleImage.raycastTarget = true; // Ensure image can receive raycasts
+        // Garante Image com raycast ON
+        Image img = particleGO.GetComponent<Image>();
+        if (img == null) img = particleGO.AddComponent<Image>();
+        img.raycastTarget = true;
 
-        Button particleButton = particleGO.GetComponent<Button>();
-        if (particleButton == null)
-        {
-            particleButton = particleGO.AddComponent<Button>();
-        }
-        particleButton.targetGraphic = particleImage; // Set the image as the button's target graphic
-        particleButton.onClick.RemoveAllListeners(); // Ensure no duplicate listeners
-        particleButton.onClick.AddListener(() => OnParticleClicked(particleGO));
-        Debug.Log($"GameManager: Listener de clique adicionado à partícula {particleGO.name}.");
+        // Adiciona o ParticleClickHandler (ou pega se já existir)
+        ParticleClickHandler handler = particleGO.GetComponent<ParticleClickHandler>();
+        if (handler == null) handler = particleGO.AddComponent<ParticleClickHandler>();
+        handler.gameManagerRef = this;
+        handler.particleGO = particleGO;
 
-        // Auto-remove after lifetime
+        Debug.Log($"[SpawnParticle] Spawnou {particleGO.name} em {rect.anchoredPosition} (raycastTarget={img.raycastTarget})");
+
         StartCoroutine(RemoveParticleAfterDelay(particleGO, particleLifetime));
     }
 
-    void OnParticleClicked(GameObject particleGO)
+    // Chamado pelo handler (IPointerClickHandler)
+    public void OnParticleClickedFromHandler(GameObject particleGO)
     {
-        Debug.Log($"GameManager: OnParticleClicked chamado para {particleGO.name}.");
-        if (!isGameRunning) return;
+        // Este método é público para o handler chamar
+        OnParticleClickedInternal(particleGO);
+    }
+
+    // Método internal que faz a remoção
+    void OnParticleClickedInternal(GameObject particleGO)
+    {
+        if (!isGameRunning)
+        {
+            Debug.Log("[OnParticleClickedInternal] Ignorado — jogo não está rodando");
+            return;
+        }
+
+        Debug.Log($"[GameManager] Clique processado em {particleGO.name}");
 
         score++;
         UpdateUI();
-        Debug.Log($"GameManager: Score incrementado para {score}.");
 
-        // Visual feedback (e.g., change color, scale up, then destroy)
-        Image particleImage = particleGO.GetComponent<Image>();
-        if (particleImage != null)
-        {
-            particleImage.color = Color.green; // Feedback color
-        }
-        // You might want to add an animation here before destroying
-        Debug.Log($"GameManager: Destruindo partícula {particleGO.name}.");
-        Destroy(particleGO, 0.1f); // Destroy after a short delay for visual feedback
-        activeParticles.Remove(particleGO);
+        Image img = particleGO.GetComponent<Image>();
+        if (img != null)
+            img.color = Color.green;
+
+        if (activeParticles.Contains(particleGO))
+            activeParticles.Remove(particleGO);
+
+        Destroy(particleGO);
     }
 
     IEnumerator RemoveParticleAfterDelay(GameObject particleGO, float delay)
     {
-        Debug.Log($"GameManager: Coroutine RemoveParticleAfterDelay iniciada para {particleGO.name}.");
-        yield return new WaitForSeconds(delay);
+        yield return new WaitForSecondsRealtime(delay);
         if (particleGO != null && activeParticles.Contains(particleGO))
         {
-            Debug.Log($"GameManager: Partícula {particleGO.name} removida por tempo.");
             activeParticles.Remove(particleGO);
             Destroy(particleGO);
-        }
-        else if (particleGO != null) {
-            Debug.Log($"GameManager: Partícula {particleGO.name} já foi removida ou não está ativa.");
         }
     }
 
     void ClearParticles()
     {
-        foreach (GameObject particle in activeParticles)
-        {
-            if (particle != null)
-            {
-                Destroy(particle);
-            }
-        }
+        foreach (var p in activeParticles)
+            if (p != null) Destroy(p);
         activeParticles.Clear();
     }
+
+    void OnRectTransformDimensionsChange()
+    {
+        foreach (var p in activeParticles)
+        {
+            if (p == null) continue;
+            RectTransform rect = p.GetComponent<RectTransform>();
+            if (rect == null) continue;
+            float size = rect.sizeDelta.x;
+            float halfWidth = (filterArea.rect.width - size) / 2f;
+            float halfHeight = (filterArea.rect.height - size) / 2f;
+            float xPos = Mathf.Clamp(rect.anchoredPosition.x, -halfWidth, halfWidth);
+            float yPos = Mathf.Clamp(rect.anchoredPosition.y, -halfHeight, halfHeight);
+            rect.anchoredPosition = new Vector2(xPos, yPos);
+        }
+    }
 }
-
-
