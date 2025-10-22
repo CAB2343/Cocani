@@ -277,7 +277,7 @@ Transform:
   m_GameObject: {fileID: 3207184152442675559}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -41.942207, y: 15.5, z: -121.82791}
+  m_LocalPosition: {x: 16.89476, y: 41.911198, z: -78.43179}
   m_LocalScale: {x: 0.64, y: 0.64, z: 0.64}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -381,7 +381,7 @@ Transform:
   m_GameObject: {fileID: 3376546324407505562}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -10.6, z: 44.9}
+  m_LocalPosition: {x: 0, y: -10.88, z: 50.64}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -592,7 +592,7 @@ Transform:
   m_GameObject: {fileID: 5285025388031466095}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -4.1099997, z: 68.5}
+  m_LocalPosition: {x: 0.07, y: -0.02, z: 77.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -667,8 +667,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 17.7, y: 17.51, z: 64.15}
-  m_Center: {x: 0, y: 2, z: -34.73}
+  m_Size: {x: 17.7, y: 17.51, z: 81.9}
+  m_Center: {x: 0, y: -2, z: -39.47}
 --- !u!114 &8568696738035855733
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -681,9 +681,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ded2e26073958d47950bc06fa98eaba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  localOffset: {x: 0, y: 0, z: 6.59}
+  localOffset: {x: 0, y: 0, z: 2.85}
   RoomPrefabs:
-  - {fileID: 3585749867448374319, guid: 2505c4859b02e9c4d882e343210ad201, type: 3}
   - {fileID: 2218170656190771314, guid: 446ec31613d9e594d97e684abd045bdd, type: 3}
   WallPrefab: {fileID: 0}
   creator: {fileID: 0}
