@@ -60,7 +60,7 @@ public class GameManager : MonoBehaviour
             physicsRaycaster = raycastCamera.GetComponent("PhysicsRaycaster");
             if (physicsRaycaster == null)
             {
-                physicsRaycaster = raycastCamera.gameObject.AddComponent("PhysicsRaycaster");
+                physicsRaycaster = UnityEngineInternal.APIUpdaterRuntimeServices.AddComponent(raycastCamera.gameObject, "Assets/_Scripts/GameManager.cs (63,36)", "PhysicsRaycaster");
             }
         }
 
@@ -85,11 +85,11 @@ public class GameManager : MonoBehaviour
         eventSystemComponent = eventSystemGO.GetComponent("EventSystem");
         if (eventSystemComponent == null)
         {
-            eventSystemComponent = eventSystemGO.AddComponent("EventSystem");
+            eventSystemComponent = UnityEngineInternal.APIUpdaterRuntimeServices.AddComponent(eventSystemGO, "Assets/_Scripts/GameManager.cs (88,36)", "EventSystem");
         }
         if (eventSystemGO.GetComponent("StandaloneInputModule") == null)
         {
-            eventSystemGO.AddComponent("StandaloneInputModule");
+            UnityEngineInternal.APIUpdaterRuntimeServices.AddComponent(eventSystemGO, "Assets/_Scripts/GameManager.cs (92,13)", "StandaloneInputModule");
         }
     }
 
@@ -126,9 +126,9 @@ public class GameManager : MonoBehaviour
         if (eventSystemGO != null)
         {
             if (eventSystemGO.GetComponent("EventSystem") == null)
-                eventSystemGO.AddComponent("EventSystem");
+                UnityEngineInternal.APIUpdaterRuntimeServices.AddComponent(eventSystemGO, "Assets/_Scripts/GameManager.cs (129,17)", "EventSystem");
             if (eventSystemGO.GetComponent("StandaloneInputModule") == null)
-                eventSystemGO.AddComponent("StandaloneInputModule");
+                UnityEngineInternal.APIUpdaterRuntimeServices.AddComponent(eventSystemGO, "Assets/_Scripts/GameManager.cs (131,17)", "StandaloneInputModule");
         }
     }
 
@@ -174,7 +174,7 @@ public class GameManager : MonoBehaviour
                     canvas.worldCamera = Camera.main;
                 }
                 if (Camera.main != null && Camera.main.GetComponent("PhysicsRaycaster") == null)
-                    Camera.main.gameObject.AddComponent("PhysicsRaycaster");
+                    UnityEngineInternal.APIUpdaterRuntimeServices.AddComponent(Camera.main.gameObject, "Assets/_Scripts/GameManager.cs (177,21)", "PhysicsRaycaster");
             }
 
             if (canvas.GetComponent<GraphicRaycaster>() == null)
