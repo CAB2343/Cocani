@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
+// using UnityEngine.EventSystems; // removido para evitar CS0246
 using System.Collections;
 using System.Collections.Generic;
 
@@ -32,7 +32,8 @@ public class GameManager : MonoBehaviour
 
     [Header("UI Components")]
     public Canvas mainCanvas;
-    public EventSystem eventSystem;
+    public GameObject eventSystemGO; // substitui EventSystem tipado
+    private Component eventSystemComponent; // referência ao componente EventSystem via string
 
     [Header("Raycaster Settings")]
     public Camera raycastCamera;
@@ -72,50 +73,30 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        if (eventSystem == null)
+        // Garantir EventSystem sem usar tipos explícitos
+        if (eventSystemGO == null)
         {
-            eventSystem = FindObjectOfType<EventSystem>();
-            if (eventSystem == null)
+            eventSystemGO = GameObject.Find("EventSystem");
+            if (eventSystemGO == null)
             {
-                GameObject eventSystemGO = new GameObject("EventSystem");
-                eventSystem = eventSystemGO.AddComponent<EventSystem>();
-                eventSystemGO.AddComponent<StandaloneInputModule>();
+                eventSystemGO = new GameObject("EventSystem");
             }
+        }
+        eventSystemComponent = eventSystemGO.GetComponent("EventSystem");
+        if (eventSystemComponent == null)
+        {
+            eventSystemComponent = eventSystemGO.AddComponent("EventSystem");
+        }
+        if (eventSystemGO.GetComponent("StandaloneInputModule") == null)
+        {
+            eventSystemGO.AddComponent("StandaloneInputModule");
         }
     }
 
-    // Método para verificar se um ponto está sobre UI
-    public bool IsPointerOverUI()
-    {
-        if (eventSystem == null) return false;
-        
-        PointerEventData eventDataCurrentPosition = new PointerEventData(eventSystem);
-        eventDataCurrentPosition.position = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
-        
-        List<RaycastResult> results = new List<RaycastResult>();
-        EventSystem.current.RaycastAll(eventDataCurrentPosition, results);
-        
-        return results.Count > 0;
-    }
-    
     // Método para fazer raycast físico
     public bool PhysicsRaycast(Vector3 origin, Vector3 direction, out RaycastHit hit, float maxDistance = Mathf.Infinity)
     {
         return Physics.Raycast(origin, direction, out hit, maxDistance);
-    }
-    
-    // Método para fazer raycast de UI
-    public List<RaycastResult> UIRaycast(Vector2 screenPosition)
-    {
-        if (eventSystem == null) return new List<RaycastResult>();
-        
-        PointerEventData eventData = new PointerEventData(eventSystem);
-        eventData.position = screenPosition;
-        
-        List<RaycastResult> results = new List<RaycastResult>();
-        EventSystem.current.RaycastAll(eventData, results);
-        
-        return results;
     }
 
     void Update()
@@ -139,6 +120,15 @@ public class GameManager : MonoBehaviour
         if (graphicRaycaster == null && mainCanvas != null)
         {
             graphicRaycaster = mainCanvas.GetComponent<GraphicRaycaster>();
+        }
+
+        // mantém o EventSystem caso seja removido
+        if (eventSystemGO != null)
+        {
+            if (eventSystemGO.GetComponent("EventSystem") == null)
+                eventSystemGO.AddComponent("EventSystem");
+            if (eventSystemGO.GetComponent("StandaloneInputModule") == null)
+                eventSystemGO.AddComponent("StandaloneInputModule");
         }
     }
 
@@ -202,7 +192,6 @@ public class GameManager : MonoBehaviour
         if (finalScoreText != null) finalScoreText.text = score.ToString();
         if (gameOverPanel != null) gameOverPanel.SetActive(true);
 
-        // Trava cursor
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
 
@@ -254,11 +243,8 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        // Instancia sem conectar (vai setar parent explicitamente para evitar problemas de escala)
         GameObject particleGO = Instantiate(dustParticlePrefab);
         particleGO.name = dustParticlePrefab.name + "_Instance";
-
-        // Força parent no filterArea e mantém escala/posição local correta
         particleGO.transform.SetParent(filterArea, false);
 
         activeParticles.Add(particleGO);
@@ -278,12 +264,10 @@ public class GameManager : MonoBehaviour
             Random.Range(-halfHeight, halfHeight)
         );
 
-        // Garante Image com raycast ON
         Image img = particleGO.GetComponent<Image>();
         if (img == null) img = particleGO.AddComponent<Image>();
         img.raycastTarget = true;
 
-        // Adiciona o ParticleClickHandler (ou pega se já existir)
         ParticleClickHandler handler = particleGO.GetComponent<ParticleClickHandler>();
         if (handler == null) handler = particleGO.AddComponent<ParticleClickHandler>();
         handler.gameManagerRef = this;
@@ -294,14 +278,11 @@ public class GameManager : MonoBehaviour
         StartCoroutine(RemoveParticleAfterDelay(particleGO, particleLifetime));
     }
 
-    // Chamado pelo handler (IPointerClickHandler)
     public void OnParticleClickedFromHandler(GameObject particleGO)
     {
-        // Este método é público para o handler chamar
         OnParticleClickedInternal(particleGO);
     }
 
-    // Método internal que faz a remoção
     void OnParticleClickedInternal(GameObject particleGO)
     {
         if (!isGameRunning)
