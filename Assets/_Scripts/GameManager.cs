@@ -169,6 +169,10 @@ public class GameManager : MonoBehaviour
         {
             if (canvas.renderMode == RenderMode.WorldSpace)
             {
+                if (canvas.worldCamera == null && Camera.main != null)
+                {
+                    canvas.worldCamera = Camera.main;
+                }
                 if (Camera.main != null && Camera.main.GetComponent("PhysicsRaycaster") == null)
                     Camera.main.gameObject.AddComponent("PhysicsRaycaster");
             }
@@ -267,6 +271,22 @@ public class GameManager : MonoBehaviour
         Image img = particleGO.GetComponent<Image>();
         if (img == null) img = particleGO.AddComponent<Image>();
         img.raycastTarget = true;
+
+        // Garantir Button para clique sem depender de IPointerClickHandler
+        Button btn = particleGO.GetComponent<Button>();
+        if (btn == null) btn = particleGO.AddComponent<Button>();
+        btn.transition = Selectable.Transition.None;
+        btn.onClick.RemoveAllListeners();
+        btn.onClick.AddListener(() => {
+            OnParticleClickedFromHandler(particleGO);
+        });
+
+        // Removido handler antigo para evitar dependência de EventSystems
+        var oldHandler = particleGO.GetComponent<ParticleClickHandler>();
+        if (oldHandler != null)
+        {
+            Destroy(oldHandler);
+        }
 
         ParticleClickHandler handler = particleGO.GetComponent<ParticleClickHandler>();
         if (handler == null) handler = particleGO.AddComponent<ParticleClickHandler>();
