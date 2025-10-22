@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Animancer;
-using UnityEngine.InputSystem.XInput;
 
 
 public class DoorController : MonoBehaviour
@@ -15,14 +14,16 @@ public class DoorController : MonoBehaviour
 
     void Start()
     {
-        animancer.Play(closeDoor);
+        if (animancer != null && closeDoor != null)
+            animancer.Play(closeDoor);
         isOpen = false;
     }
     void OnTriggerEnter(Collider other)
     {
         if (isOpen == false && other.CompareTag("Player") && stayClosed == false)
         {
-            animancer.Play(openDoor);
+            if (animancer != null && openDoor != null)
+                animancer.Play(openDoor);
             isOpen = true;
         }
                 
@@ -32,7 +33,8 @@ public class DoorController : MonoBehaviour
         if(isOpen == true && other.CompareTag("Player") && stayClosed == false)
         {
             Debug.Log("Player saiu do trigger, fechando porta.");
-            animancer.Play(closeDoor);
+            if (animancer != null && closeDoor != null)
+                animancer.Play(closeDoor);
             isOpen = false;
         }
 
