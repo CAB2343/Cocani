@@ -403,7 +403,7 @@ GameObject:
   - component: {fileID: 8044592812884826685}
   m_Layer: 0
   m_Name: CorredorReto
-  m_TagString: Untagged
+  m_TagString: Room
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -931,6 +931,9 @@ MonoBehaviour:
   localOffset: {x: 0, y: 0, z: 2.85}
   RoomPrefabs:
   - {fileID: 2218170656190771314, guid: 446ec31613d9e594d97e684abd045bdd, type: 3}
+  - {fileID: 3207184152442675559}
+  - {fileID: 5578205765381458282, guid: 59b243dd9d1b4294296d43b277ec32d9, type: 3}
+  - {fileID: 826786270907585041, guid: 09874724cd79a0548945714b3d9eac2f, type: 3}
   WallPrefab: {fileID: 0}
   creator: {fileID: 0}
   created: {fileID: 0}
