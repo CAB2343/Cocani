@@ -296,10 +296,10 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1357634406}
   - {fileID: 357978742}
   - {fileID: 303674768}
   - {fileID: 864658410}
-  - {fileID: 1357634406}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -2166,7 +2166,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0.392}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -3314,7 +3314,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1357634406
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3331,9 +3331,9 @@ RectTransform:
   - {fileID: 1492599026}
   - {fileID: 263945511}
   - {fileID: 1631055519}
-  - {fileID: 21886452}
   - {fileID: 82691220}
   - {fileID: 945991033}
+  - {fileID: 21886452}
   m_Father: {fileID: 36877658}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -3623,7 +3623,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 47.8}
+  m_AnchoredPosition: {x: 0, y: 7}
   m_SizeDelta: {x: 247.2, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1492599027
@@ -3648,7 +3648,7 @@ MonoBehaviour:
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_HighlightedColor: {r: 1, g: 0, b: 0, a: 1}
     m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
     m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
@@ -3669,7 +3669,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1492599028}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2110764398}
+        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
+        m_MethodName: StartGame
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1492599028
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3811,8 +3823,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f45957714aa56d4682200221d60ba4f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameManagerRef: {fileID: 0}
-  particleGO: {fileID: 0}
 --- !u!1 &1603897007
 GameObject:
   m_ObjectHideFlags: 0
@@ -4690,19 +4700,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7063cc0f109abec4abd9c8784d253c7e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scoreText: {fileID: 263945512}
-  timerText: {fileID: 1631055520}
+  minigamePanel: {fileID: 0}
   startButton: {fileID: 1492599027}
   filterArea: {fileID: 1525715534}
-  gameOverPanel: {fileID: 21886451}
-  finalScoreText: {fileID: 1888839138}
-  restartButton: {fileID: 344116081}
   dustParticlePrefab: {fileID: 4283037977135791361, guid: 515373f3f599baa449ee3728ea0e9fd7, type: 3}
-  gameDuration: 30
-  particleLifetime: 2.5
-  particleSpawnRate: 2
+  scoreText: {fileID: 263945512}
   particleSizeRange: {x: 25, y: 45}
-  minigamePanel: {fileID: 1357634405}
+  particleLifetime: 2.5
+  spawnInterval: 1
 --- !u!4 &2110764399
 Transform:
   m_ObjectHideFlags: 0
@@ -4730,6 +4735,6 @@ SceneRoots:
   - {fileID: 595251292}
   - {fileID: 276632058}
   - {fileID: 36877658}
-  - {fileID: 1165738077}
   - {fileID: 1041861305}
   - {fileID: 998228998}
+  - {fileID: 1165738077}

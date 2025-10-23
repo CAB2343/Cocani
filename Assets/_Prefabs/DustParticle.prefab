@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 2968640123950489060}
   - component: {fileID: 5462743561796755064}
   - component: {fileID: 2823588166149007878}
-  - component: {fileID: 6936233186666799294}
   m_Layer: 5
   m_Name: DustParticle
   m_TagString: Untagged
@@ -90,17 +89,3 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   particleType: Normal
---- !u!114 &6936233186666799294
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4283037977135791361}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6f45957714aa56d4682200221d60ba4f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gameManagerRef: {fileID: 0}
-  particleGO: {fileID: 0}
