@@ -95,10 +95,12 @@ public class PlayerController1 : MonoBehaviour
     #region Movement
     void Movement()
     {
+        if (_ChController == null) return;
         float HorizontalInput = Input.GetAxisRaw("Horizontal");
         float VerticalInput = Input.GetAxisRaw("Vertical");
         Vector3 moveDirection = new Vector3(HorizontalInput, 0, VerticalInput).normalized;
-        moveDirection = _MyCamera.TransformDirection(moveDirection);
+        if (_MyCamera != null) { moveDirection = _MyCamera.TransformDirection(moveDirection); }
+        else { moveDirection = transform.TransformDirection(moveDirection); }
         moveDirection.y = 0;
         _ChController.Move(moveDirection * _MoveSpeed * Time.deltaTime);
 
@@ -114,6 +116,7 @@ public class PlayerController1 : MonoBehaviour
 
     void HandleCrouch()
     {
+        if (_ChController == null) return;
         if (Input.GetKey(KeyCode.LeftControl))
         {
             if (!isCrouching)
@@ -149,6 +152,7 @@ public class PlayerController1 : MonoBehaviour
     #region Gravity
     void NormalGravity()
     {
+        if (_ChController == null) return;
         _verticalVelocity += _gravity * Time.deltaTime;
         _ChController.Move(Vector3.up * _verticalVelocity * Time.deltaTime);
     }
@@ -168,6 +172,7 @@ public class PlayerController1 : MonoBehaviour
     #region Ground Check
     void HandleGrounding()
     {
+        if (_ChController == null) { _IsGrounded = false; return; }
         if (_ChController.isGrounded && _verticalVelocity <= 0f)
         {
             _groundedTimer = _groundedGraceTime;
@@ -186,6 +191,7 @@ public class PlayerController1 : MonoBehaviour
     #region Animation
     void Animate()
     {
+        if (animancer == null) return;
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
 
