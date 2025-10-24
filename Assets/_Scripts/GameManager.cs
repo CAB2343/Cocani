@@ -1,118 +1,188 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class GameManager : MonoBehaviour
 {
-    [Header("UI Components")]
-    public Canvas mainCanvas;
-    public EventSystem eventSystem;
-    
-    [Header("Raycaster Settings")]
-    public Camera raycastCamera;
-    
-    private PhysicsRaycaster physicsRaycaster;
-    private GraphicRaycaster graphicRaycaster;
-    
+    [Header("Referências UI")]
+    public GameObject minigamePanel;         // Painel do minigame (com o botão e área de filtro)
+    public Button startButton;               // Botão “Iniciar Limpeza”
+    public RectTransform filterArea;         // Área onde as partículas aparecem
+    public GameObject dustParticlePrefab;    // Prefab das partículas
+    public Text scoreText;                   // Texto de pontuação
+
+    [Header("Configurações de Partículas")]
+    public Vector2 particleSizeRange = new Vector2(25f, 45f);
+    public float particleLifetime = 2.5f;
+    public float spawnInterval = 1f;
+
+    private int score = 0;
+    private bool isGameRunning = false;
+    private List<GameObject> activeParticles = new List<GameObject>();
+
     void Start()
     {
-        InitializeRaycasters();
-    }
-    
-    void InitializeRaycasters()
-    {
-        // Inicializar PhysicsRaycaster se não existir
-        if (raycastCamera != null)
+        // Garante que o painel do minigame esteja visível no início
+        if (minigamePanel != null)
+            minigamePanel.SetActive(true);
+
+        // Configura o botão "Iniciar Limpeza"
+        if (startButton != null)
         {
-            physicsRaycaster = raycastCamera.GetComponent<PhysicsRaycaster>();
-            if (physicsRaycaster == null)
+            startButton.onClick.AddListener(() =>
             {
-                physicsRaycaster = raycastCamera.gameObject.AddComponent<PhysicsRaycaster>();
-            }
+                StartGame();
+                if (minigamePanel != null)
+                    minigamePanel.SetActive(false); // Oculta o painel ao iniciar
+            });
         }
-        
-        // Inicializar GraphicRaycaster no Canvas se não existir
-        if (mainCanvas != null)
+
+        EnsureEventSystem();
+    }
+
+    // =============================================================
+    // ==            INÍCIO E LÓGICA DO MINIGAME                  ==
+    // =============================================================
+    public void StartGame()
+    {
+        if (filterArea == null || dustParticlePrefab == null)
         {
-            graphicRaycaster = mainCanvas.GetComponent<GraphicRaycaster>();
-            if (graphicRaycaster == null)
-            {
-                graphicRaycaster = mainCanvas.gameObject.AddComponent<GraphicRaycaster>();
-            }
+            Debug.LogError("[GameManager] Faltando referências (FilterArea ou DustParticlePrefab).");
+            return;
         }
-        
-        // Verificar se EventSystem existe
-        if (eventSystem == null)
+
+        EnsureCanvasSetup();
+
+        score = 0;
+        UpdateScoreUI();
+
+        isGameRunning = true;
+        StartCoroutine(SpawnParticles());
+
+        Debug.Log("[GameManager] Minigame iniciado!");
+    }
+
+    // =============================================================
+    // ==                   SPAWN DE PARTÍCULAS                   ==
+    // =============================================================
+    IEnumerator SpawnParticles()
+    {
+        while (isGameRunning)
         {
-            eventSystem = FindObjectOfType<EventSystem>();
-            if (eventSystem == null)
-            {
-                GameObject eventSystemGO = new GameObject("EventSystem");
-                eventSystem = eventSystemGO.AddComponent<EventSystem>();
-                eventSystemGO.AddComponent<StandaloneInputModule>();
-            }
+            SpawnParticle();
+            yield return new WaitForSecondsRealtime(spawnInterval);
         }
     }
-    
-    // Método para verificar se um ponto está sobre UI
-    public bool IsPointerOverUI()
+
+    void SpawnParticle()
     {
-        if (eventSystem == null) return false;
-        
-        PointerEventData eventDataCurrentPosition = new PointerEventData(eventSystem);
-        eventDataCurrentPosition.position = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
-        
-        List<RaycastResult> results = new List<RaycastResult>();
-        EventSystem.current.RaycastAll(eventDataCurrentPosition, results);
-        
-        return results.Count > 0;
+        if (!isGameRunning || filterArea == null || dustParticlePrefab == null)
+            return;
+
+        GameObject particleGO = Instantiate(dustParticlePrefab);
+        particleGO.transform.SetParent(filterArea, false);
+        activeParticles.Add(particleGO);
+
+        RectTransform rect = particleGO.GetComponent<RectTransform>();
+        if (rect == null) rect = particleGO.AddComponent<RectTransform>();
+
+        float size = Random.Range(particleSizeRange.x, particleSizeRange.y);
+        rect.sizeDelta = new Vector2(size, size);
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+
+        float halfWidth = (filterArea.rect.width - size) / 2f;
+        float halfHeight = (filterArea.rect.height - size) / 2f;
+
+        rect.anchoredPosition = new Vector2(
+            Random.Range(-halfWidth, halfWidth),
+            Random.Range(-halfHeight, halfHeight)
+        );
+
+        Image img = particleGO.GetComponent<Image>();
+        if (img == null) img = particleGO.AddComponent<Image>();
+        img.raycastTarget = true;
+
+        // Adiciona handler de clique
+        ParticleClickHandler handler = particleGO.GetComponent<ParticleClickHandler>();
+        if (handler == null) handler = particleGO.AddComponent<ParticleClickHandler>();
+        handler.gameManagerRef = this;
+        handler.particleGO = particleGO;
+
+        StartCoroutine(RemoveParticleAfterDelay(particleGO, particleLifetime));
     }
-    
-    // Método para fazer raycast físico
-    public bool PhysicsRaycast(Vector3 origin, Vector3 direction, out RaycastHit hit, float maxDistance = Mathf.Infinity)
+
+    IEnumerator RemoveParticleAfterDelay(GameObject particle, float delay)
     {
-        return Physics.Raycast(origin, direction, out hit, maxDistance);
-    }
-    
-    // Método para fazer raycast de UI
-    public List<RaycastResult> UIRaycast(Vector2 screenPosition)
-    {
-        if (eventSystem == null) return new List<RaycastResult>();
-        
-        PointerEventData eventData = new PointerEventData(eventSystem);
-        eventData.position = screenPosition;
-        
-        List<RaycastResult> results = new List<RaycastResult>();
-        EventSystem.current.RaycastAll(eventData, results);
-        
-        return results;
-    }
-    
-    void Update()
-    {
-        // Verificar se os componentes ainda existem
-        if (physicsRaycaster == null && raycastCamera != null)
+        yield return new WaitForSecondsRealtime(delay);
+        if (particle != null)
         {
-            physicsRaycaster = raycastCamera.GetComponent<PhysicsRaycaster>();
+            activeParticles.Remove(particle);
+            Destroy(particle);
         }
-        
-        if (graphicRaycaster == null && mainCanvas != null)
+    }
+
+    public void OnParticleClickedFromHandler(GameObject particle)
+    {
+        if (particle == null) return;
+
+        if (activeParticles.Contains(particle))
+            activeParticles.Remove(particle);
+
+        Destroy(particle);
+        score++;
+        UpdateScoreUI();
+    }
+
+    void UpdateScoreUI()
+    {
+        if (scoreText != null)
+            scoreText.text = $"Poeira limpa: {score}";
+    }
+
+    // =============================================================
+    // ==                   SUPORTE AO PAUSE                      ==
+    // =============================================================
+    public void PauseGame()
+    {
+        isGameRunning = false;
+        Debug.Log("[GameManager] Jogo pausado.");
+    }
+
+    public void UnpauseGame()
+    {
+        if (!isGameRunning)
         {
-            graphicRaycaster = mainCanvas.GetComponent<GraphicRaycaster>();
+            isGameRunning = true;
+            StartCoroutine(SpawnParticles());
+            Debug.Log("[GameManager] Jogo retomado.");
         }
     }
-    
-    // Método para obter o PhysicsRaycaster atual
-    public PhysicsRaycaster GetPhysicsRaycaster()
+
+    // =============================================================
+    // ==                 AJUSTES DE CANVAS E EVENTOS              ==
+    // =============================================================
+    void EnsureCanvasSetup()
     {
-        return physicsRaycaster;
+        Canvas canvas = filterArea.GetComponentInParent<Canvas>();
+        if (canvas != null)
+        {
+            if (canvas.renderMode == RenderMode.WorldSpace && canvas.worldCamera == null && Camera.main != null)
+                canvas.worldCamera = Camera.main;
+
+            if (canvas.GetComponent<GraphicRaycaster>() == null)
+                canvas.gameObject.AddComponent<GraphicRaycaster>();
+        }
     }
-    
-    // Método para obter o GraphicRaycaster atual
-    public GraphicRaycaster GetGraphicRaycaster()
+
+    void EnsureEventSystem()
     {
-        return graphicRaycaster;
+        if (FindObjectOfType<EventSystem>() == null)
+        {
+            new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
+            Debug.Log("[GameManager] EventSystem criado automaticamente.");
+        }
     }
 }

@@ -9,7 +9,6 @@ public class RadarArea : MonoBehaviour
 
     void Update()
     {
-        // Pega todos os colliders dentro da esfera
         Collider[] hits = Physics.OverlapSphere(transform.position, sphereRadius);
 
         bool detectou = false;
@@ -18,14 +17,14 @@ public class RadarArea : MonoBehaviour
         {
             if (hit.CompareTag("minigame"))
             {
-                Debug.Log("Detectado: " + hit.name);
+                Debug.Log("(づ￣ 3￣)づ");
                 detectou = true;
             }
         }
 
         if (!detectou)
         {
-            Debug.Log("Nenhum objeto 'minigame' dentro da esfera");
+            Debug.Log("não");
         }
     }
 
