@@ -13159,6 +13159,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: MINIGAME DAS LETRAS
       objectReference: {fileID: 0}
+    - target: {fileID: 7476114951318129843, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7746461340817194301, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
       propertyPath: m_Enabled
       value: 1

@@ -3,6 +3,10 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+// ObjectiveBarMulti.cs
+// Atualizado para integrar com MiniGameActivator.
+// Coloque este arquivo em Assets/Scripts/ObjectiveBarMulti.cs
+
 public class ObjectiveBarMulti : MonoBehaviour
 {
     [Header("UI Elements (configure no Inspector)")]
@@ -18,7 +22,7 @@ public class ObjectiveBarMulti : MonoBehaviour
     public Camera referenceCamera;               // câmera que representa o olhar do jogador (recomendado)
     public Transform player;                     // fallback se camera null (se seu player tem tag "Player" o script tentará encontrá-lo)
 
-    [Header("Detection")]
+    [Header("Detection (fallback se activator não estiver setado)")]
     public GameObject[] objectivePrefabs;
     public string objectiveTag = "";
 
@@ -35,6 +39,10 @@ public class ObjectiveBarMulti : MonoBehaviour
     public float scaleSmoothSpeed = 12f;
     [Tooltip("Ângulo máximo (graus) entre camera.forward e direção ao objetivo para considerarmos que 'estamos olhando' para ele.")]
     public float lookAngleThreshold = 10f;
+
+    [Header("Link to MiniGameActivator (opcional)")]
+    [Tooltip("Se atribuído, a barra usará apenas a lista gerenciada pelo activator (recomendado).")]
+    public MiniGameActivator activator;
 
     private Dictionary<Transform, MarkerData> markers = new Dictionary<Transform, MarkerData>();
     private float detectTimer = 0f;
@@ -62,6 +70,20 @@ public class ObjectiveBarMulti : MonoBehaviour
         Canvas.ForceUpdateCanvases();
         LayoutRebuilder.ForceRebuildLayoutImmediate(barRect);
         UpdateCardinalLabels();
+
+        if (activator != null)
+        {
+            // assina atualizações do activator
+            activator.OnManagedListUpdated += OnActivatorUpdated;
+            // faz uma detecção inicial a partir do activator
+            PerformDetectionUsingActivator();
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (activator != null)
+            activator.OnManagedListUpdated -= OnActivatorUpdated;
     }
 
     void Update()
@@ -70,7 +92,8 @@ public class ObjectiveBarMulti : MonoBehaviour
         if (detectTimer >= detectInterval)
         {
             detectTimer = 0f;
-            PerformDetection();
+            if (activator != null) PerformDetectionUsingActivator();
+            else PerformDetection();
         }
 
         UpdateCardinalLabels();
@@ -79,6 +102,46 @@ public class ObjectiveBarMulti : MonoBehaviour
         UpdateMarkers();
     }
 
+    // ---------- NOVO: usa lista do activator, caso exista ----------
+    void OnActivatorUpdated() => PerformDetectionUsingActivator();
+
+    void PerformDetectionUsingActivator()
+    {
+        if (activator == null) return;
+
+        // obtém transforms gerenciados pelo activator (somente ativos por padrão)
+        List<Transform> managed = activator.GetManagedTransforms(onlyActive: true);
+
+        // opcional: respeitar enableCount (normalmente activator já faz isso)
+        int limit = Mathf.Max(1, activator.enableCount);
+        if (managed.Count > limit)
+        {
+            // se haver mais do que o limite, cortamos a lista (não deveria ocorrer se activator mantiver apenas enableCount ativos)
+            managed.RemoveRange(limit, managed.Count - limit);
+        }
+
+        HashSet<Transform> found = new HashSet<Transform>(managed);
+
+        foreach (Transform t in found)
+            if (!markers.ContainsKey(t))
+                CreateMarkerForTarget(t);
+
+        List<Transform> toRemove = new List<Transform>();
+        foreach (var kv in markers)
+        {
+            Transform target = kv.Key;
+            if (target == null || !found.Contains(target))
+            {
+                if (kv.Value != null && kv.Value.ui != null)
+                    Destroy(kv.Value.ui.gameObject);
+                toRemove.Add(target);
+            }
+        }
+        foreach (var r in toRemove) markers.Remove(r);
+    }
+    // -----------------------------------------------------------------
+
+    // ----------------- EXISTENTE: varredura antiga (fallback) -----------------
     void PerformDetection()
     {
         HashSet<Transform> found = new HashSet<Transform>();
@@ -124,9 +187,12 @@ public class ObjectiveBarMulti : MonoBehaviour
         }
         foreach (var r in toRemove) markers.Remove(r);
     }
+    // -------------------------------------------------------------------------
 
     void CreateMarkerForTarget(Transform target)
     {
+        if (markerPrefab == null || barRect == null) return;
+
         RectTransform inst = Instantiate(markerPrefab, barRect);
         inst.gameObject.SetActive(true);
 
@@ -136,7 +202,6 @@ public class ObjectiveBarMulti : MonoBehaviour
         inst.anchoredPosition = Vector2.zero;
         inst.localEulerAngles = Vector3.zero;
 
-        // IMPORTANTE: não alteramos inst.localScale — vamos usar a escala que estiver definida no prefab
         // Aplicar sizeDelta caso o usuário queira forçar um tamanho
         Vector2 defaultMarkerSize = new Vector2(24f, 24f);
         if (markerSize != Vector2.zero)
@@ -153,11 +218,10 @@ public class ObjectiveBarMulti : MonoBehaviour
         {
             ui = inst,
             curX = inst.anchoredPosition.x,
-            baseScale = inst.localScale,    // grava a escala inicial do prefab
-            curScaleFactor = 1f             // começa com fator 1 (baseScale)
+            baseScale = inst.localScale,
+            curScaleFactor = 1f
         };
 
-        // aplica explicitamente a escala base (útil caso o prefab tenha sido modificado na cena)
         inst.localScale = d.baseScale * d.curScaleFactor;
 
         markers.Add(target, d);
