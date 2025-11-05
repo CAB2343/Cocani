@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
+  m_IndirectSpecularColor: {r: 0.18028346, g: 0.22571373, b: 0.30692244, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -4700,7 +4700,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7063cc0f109abec4abd9c8784d253c7e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  minigamePanel: {fileID: 0}
+  minigamePanel: {fileID: 1357634405}
   startButton: {fileID: 1492599027}
   filterArea: {fileID: 1525715534}
   dustParticlePrefab: {fileID: 4283037977135791361, guid: 515373f3f599baa449ee3728ea0e9fd7, type: 3}
