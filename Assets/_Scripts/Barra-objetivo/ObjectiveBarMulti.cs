@@ -3,10 +3,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-// ObjectiveBarMulti.cs
-// Atualizado para integrar com MiniGameActivator.
-// Coloque este arquivo em Assets/Scripts/ObjectiveBarMulti.cs
-
 public class ObjectiveBarMulti : MonoBehaviour
 {
     [Header("UI Elements (configure no Inspector)")]
@@ -22,7 +18,7 @@ public class ObjectiveBarMulti : MonoBehaviour
     public Camera referenceCamera;               // câmera que representa o olhar do jogador (recomendado)
     public Transform player;                     // fallback se camera null (se seu player tem tag "Player" o script tentará encontrá-lo)
 
-    [Header("Detection (fallback se activator não estiver setado)")]
+    [Header("Detection")]
     public GameObject[] objectivePrefabs;
     public string objectiveTag = "";
 
@@ -35,14 +31,12 @@ public class ObjectiveBarMulti : MonoBehaviour
     [Header("Look & Highlight (simple scale)")]
     [Tooltip("Multiplicador aplicado à escala base do prefab quando o objetivo está sendo olhado.")]
     public float growthMultiplier = 1.4f;
+
     [Tooltip("Velocidade de suavização da escala (quanto maior, mais rápido cresce/volta).")]
     public float scaleSmoothSpeed = 12f;
+
     [Tooltip("Ângulo máximo (graus) entre camera.forward e direção ao objetivo para considerarmos que 'estamos olhando' para ele.")]
     public float lookAngleThreshold = 10f;
-
-    [Header("Link to MiniGameActivator (opcional)")]
-    [Tooltip("Se atribuído, a barra usará apenas a lista gerenciada pelo activator (recomendado).")]
-    public MiniGameActivator activator;
 
     private Dictionary<Transform, MarkerData> markers = new Dictionary<Transform, MarkerData>();
     private float detectTimer = 0f;
@@ -52,14 +46,16 @@ public class ObjectiveBarMulti : MonoBehaviour
     {
         public RectTransform ui;
         public float curX;
-        public Vector3 baseScale;      // escala inicial do prefab (usada como referência)
-        public float curScaleFactor;   // fator multiplicador atual (1 = baseScale)
+        public Vector3 baseScale;     // escala inicial do prefab (usada como referência)
+        public float curScaleFactor;  // fator multiplicador atual (1 = baseScale)
     }
 
     void Awake()
     {
-        if (barRect == null) Debug.LogError("ObjectiveBarMulti: barRect não setado.");
-        if (markerPrefab == null) Debug.LogError("ObjectiveBarMulti: markerPrefab não setado (crie um UI Image).");
+        if (barRect == null)
+            Debug.LogError("ObjectiveBarMulti: barRect não setado.");
+        if (markerPrefab == null)
+            Debug.LogError("ObjectiveBarMulti: markerPrefab não setado (crie um UI Image).");
 
         if (markerPrefab != null)
             markerPrefab.gameObject.SetActive(false);
@@ -70,20 +66,6 @@ public class ObjectiveBarMulti : MonoBehaviour
         Canvas.ForceUpdateCanvases();
         LayoutRebuilder.ForceRebuildLayoutImmediate(barRect);
         UpdateCardinalLabels();
-
-        if (activator != null)
-        {
-            // assina atualizações do activator
-            activator.OnManagedListUpdated += OnActivatorUpdated;
-            // faz uma detecção inicial a partir do activator
-            PerformDetectionUsingActivator();
-        }
-    }
-
-    void OnDestroy()
-    {
-        if (activator != null)
-            activator.OnManagedListUpdated -= OnActivatorUpdated;
     }
 
     void Update()
@@ -92,8 +74,7 @@ public class ObjectiveBarMulti : MonoBehaviour
         if (detectTimer >= detectInterval)
         {
             detectTimer = 0f;
-            if (activator != null) PerformDetectionUsingActivator();
-            else PerformDetection();
+            PerformDetection();
         }
 
         UpdateCardinalLabels();
@@ -102,46 +83,6 @@ public class ObjectiveBarMulti : MonoBehaviour
         UpdateMarkers();
     }
 
-    // ---------- NOVO: usa lista do activator, caso exista ----------
-    void OnActivatorUpdated() => PerformDetectionUsingActivator();
-
-    void PerformDetectionUsingActivator()
-    {
-        if (activator == null) return;
-
-        // obtém transforms gerenciados pelo activator (somente ativos por padrão)
-        List<Transform> managed = activator.GetManagedTransforms(onlyActive: true);
-
-        // opcional: respeitar enableCount (normalmente activator já faz isso)
-        int limit = Mathf.Max(1, activator.enableCount);
-        if (managed.Count > limit)
-        {
-            // se haver mais do que o limite, cortamos a lista (não deveria ocorrer se activator mantiver apenas enableCount ativos)
-            managed.RemoveRange(limit, managed.Count - limit);
-        }
-
-        HashSet<Transform> found = new HashSet<Transform>(managed);
-
-        foreach (Transform t in found)
-            if (!markers.ContainsKey(t))
-                CreateMarkerForTarget(t);
-
-        List<Transform> toRemove = new List<Transform>();
-        foreach (var kv in markers)
-        {
-            Transform target = kv.Key;
-            if (target == null || !found.Contains(target))
-            {
-                if (kv.Value != null && kv.Value.ui != null)
-                    Destroy(kv.Value.ui.gameObject);
-                toRemove.Add(target);
-            }
-        }
-        foreach (var r in toRemove) markers.Remove(r);
-    }
-    // -----------------------------------------------------------------
-
-    // ----------------- EXISTENTE: varredura antiga (fallback) -----------------
     void PerformDetection()
     {
         HashSet<Transform> found = new HashSet<Transform>();
@@ -149,7 +90,9 @@ public class ObjectiveBarMulti : MonoBehaviour
         if (!string.IsNullOrEmpty(objectiveTag))
         {
             GameObject[] objs = GameObject.FindGameObjectsWithTag(objectiveTag);
-            foreach (GameObject go in objs) if (go != null && go.activeInHierarchy) found.Add(go.transform);
+            foreach (GameObject go in objs)
+                if (go != null && go.activeInHierarchy)
+                    found.Add(go.transform);
         }
 
         if (objectivePrefabs != null && objectivePrefabs.Length > 0)
@@ -162,7 +105,10 @@ public class ObjectiveBarMulti : MonoBehaviour
                 foreach (Transform t in allTransforms)
                 {
                     if (t == null || !t.gameObject.activeInHierarchy) continue;
-                    if (t.name == baseName || t.name.StartsWith(baseName + " (") || t.name.StartsWith(baseName + "(") || t.name.StartsWith(baseName))
+                    if (t.name == baseName
+                        || t.name.StartsWith(baseName + " (")
+                        || t.name.StartsWith(baseName + "(")
+                        || t.name.StartsWith(baseName))
                     {
                         found.Add(t);
                     }
@@ -185,14 +131,13 @@ public class ObjectiveBarMulti : MonoBehaviour
                 toRemove.Add(target);
             }
         }
-        foreach (var r in toRemove) markers.Remove(r);
+
+        foreach (var r in toRemove)
+            markers.Remove(r);
     }
-    // -------------------------------------------------------------------------
 
     void CreateMarkerForTarget(Transform target)
     {
-        if (markerPrefab == null || barRect == null) return;
-
         RectTransform inst = Instantiate(markerPrefab, barRect);
         inst.gameObject.SetActive(true);
 
@@ -202,6 +147,7 @@ public class ObjectiveBarMulti : MonoBehaviour
         inst.anchoredPosition = Vector2.zero;
         inst.localEulerAngles = Vector3.zero;
 
+        // IMPORTANTE: não alteramos inst.localScale — vamos usar a escala que estiver definida no prefab
         // Aplicar sizeDelta caso o usuário queira forçar um tamanho
         Vector2 defaultMarkerSize = new Vector2(24f, 24f);
         if (markerSize != Vector2.zero)
@@ -218,12 +164,12 @@ public class ObjectiveBarMulti : MonoBehaviour
         {
             ui = inst,
             curX = inst.anchoredPosition.x,
-            baseScale = inst.localScale,
-            curScaleFactor = 1f
+            baseScale = inst.localScale, // grava a escala inicial do prefab
+            curScaleFactor = 1f          // começa com fator 1 (baseScale)
         };
 
+        // aplica explicitamente a escala base (útil caso o prefab tenha sido modificado na cena)
         inst.localScale = d.baseScale * d.curScaleFactor;
-
         markers.Add(target, d);
     }
 
@@ -242,7 +188,10 @@ public class ObjectiveBarMulti : MonoBehaviour
         {
             found = GameObject.FindWithTag("Player");
         }
-        catch { found = null; }
+        catch
+        {
+            found = null;
+        }
 
         if (found != null)
         {
@@ -286,12 +235,10 @@ public class ObjectiveBarMulti : MonoBehaviour
             Vector3 dir = t.position - refPos;
             Vector3 dirFlat = Vector3.ProjectOnPlane(dir, Vector3.up);
             if (dirFlat.sqrMagnitude < 0.0001f) continue;
-
             dirFlat.Normalize();
 
             // angle between flattened forward and flattened direction
             float angle = Vector3.Angle(refForwardFlat, dirFlat);
-
             if (angle <= bestAngle)
             {
                 bestAngle = angle;
@@ -301,11 +248,12 @@ public class ObjectiveBarMulti : MonoBehaviour
 
         lookedTarget = best;
     }
-    // -------------------------------------------------------------------------------
 
+    // -------------------------------------------------------------------------------
     void UpdateMarkers()
     {
         if (barRect == null) return;
+
         float halfWidth = barRect.rect.width * 0.5f;
         Transform refT = GetReferenceTransform();
         Vector3 refPos = refT != null ? refT.position : Vector3.zero;
@@ -327,15 +275,19 @@ public class ObjectiveBarMulti : MonoBehaviour
             Vector3 dir = target.position - refPos;
             dir.y = 0f;
             if (dir.sqrMagnitude < 0.0001f) continue;
+
             float worldAngle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
             if (worldAngle < 0f) worldAngle += 360f;
+
             float relativeAngle = Mathf.DeltaAngle(refYaw, worldAngle);
             float normalized = (relativeAngle + 180f) / 360f;
             float targetLocalX = Mathf.Lerp(-halfWidth, halfWidth, normalized);
+
             if (clampToBar) targetLocalX = Mathf.Clamp(targetLocalX, -halfWidth, halfWidth);
 
             float tPos = 1f - Mathf.Exp(-smoothSpeed * Time.deltaTime);
             md.curX = Mathf.Lerp(md.curX, targetLocalX, tPos);
+
             Vector2 anchored = md.ui.anchoredPosition;
             md.ui.anchoredPosition = new Vector2(md.curX, anchored.y);
 
@@ -348,12 +300,14 @@ public class ObjectiveBarMulti : MonoBehaviour
             md.ui.localScale = md.baseScale * md.curScaleFactor;
         }
 
-        foreach (Transform r in died) markers.Remove(r);
+        foreach (Transform r in died)
+            markers.Remove(r);
     }
 
     void UpdateCardinalLabels()
     {
         if (barRect == null) return;
+
         TMP_Text[] labels = new TMP_Text[] { labelN, labelL, labelS, labelO };
         float[] cardAngles = new float[] { 0f, 90f, 180f, 270f };
 
@@ -364,13 +318,14 @@ public class ObjectiveBarMulti : MonoBehaviour
         for (int i = 0; i < labels.Length; i++)
         {
             if (labels[i] == null) continue;
+
             float worldCard = cardAngles[i];
             float rel = Mathf.DeltaAngle(refYaw, worldCard);
             float normalized = (rel + 180f) / 360f;
             float x = Mathf.Lerp(-halfWidth, halfWidth, normalized);
+
             RectTransform rt = labels[i].GetComponent<RectTransform>();
-            if (rt != null)
-                rt.anchoredPosition = new Vector2(x, rt.anchoredPosition.y);
+            if (rt != null) rt.anchoredPosition = new Vector2(x, rt.anchoredPosition.y);
         }
     }
 
@@ -409,8 +364,7 @@ public class ObjectiveBarMulti : MonoBehaviour
     public void RegisterTarget(Transform t)
     {
         if (t == null) return;
-        if (!markers.ContainsKey(t))
-            CreateMarkerForTarget(t);
+        if (!markers.ContainsKey(t)) CreateMarkerForTarget(t);
     }
 
     public void UnregisterTarget(Transform t)
@@ -426,7 +380,9 @@ public class ObjectiveBarMulti : MonoBehaviour
     public void ClearAllTargets()
     {
         foreach (var kv in markers)
-            if (kv.Value != null && kv.Value.ui != null) Destroy(kv.Value.ui.gameObject);
+            if (kv.Value != null && kv.Value.ui != null)
+                Destroy(kv.Value.ui.gameObject);
+
         markers.Clear();
     }
 }
