@@ -283,6 +283,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: "navega\xE7\xE3oOTIMIZADO"
       objectReference: {fileID: 0}
+    - target: {fileID: 5819055319466115206, guid: 50d6f483165c35944b5b0236ac910126, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 9060074465066596259, guid: 50d6f483165c35944b5b0236ac910126, type: 3}
       propertyPath: RoomPrefabs.Array.size
       value: 3
