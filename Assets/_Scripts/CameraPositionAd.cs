@@ -6,7 +6,6 @@ public class CameraPositionAd : MonoBehaviour
 
     void LateUpdate()
     {
-        // Atualiza apenas a posição da câmera virtual
         transform.position = cameraPosition.position;
     }
 }

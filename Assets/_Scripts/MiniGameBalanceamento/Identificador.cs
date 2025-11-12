@@ -1,187 +1,171 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Collections; // Adicionado para suportar IEnumerator
 
 public class Identificador : MonoBehaviour
 {
-    [Tooltip("Tag a ser gerenciada (edite pelo Inspector)")]
+    [Tooltip("Tag a ser ativada (edite pelo Inspector)")]
     public string tagToManage = "Enemy";
 
-    [Tooltip("Número máximo de objetos com essa tag que podem estar ativos ao mesmo tempo")]
-    [Range(1, 100)]
-    public int maxActive = 5;
+    [Tooltip("0 = sem limite (ativa todos os encontrados). >0 = ativa até este número por chamada de EnforceNow")]
+    [Min(0)]
+    public int maxToActivate = 0;
 
-    [Tooltip("Intervalo (s) para checar e aplicar o limite. 0 = só em Start e quando EnforceNow() for chamado")]
-    public float updateInterval = 0.5f;
-
-    [Header("Comportamento")]
-    [Tooltip("Se true, garante hard-limit: se existirem mais ativos que maxActive, desativa os excedentes")]
-    public bool enforceHardLimit = true;
+    [Tooltip("Se > 0, espaça a ativação entre objetos (em segundos) para evitar picos")]
+    public float staggerInterval = 0f;
 
     [Header("Debug")]
     public bool enableDebug = true;
-    [Tooltip("Se true, só loga quando a contagem ativa muda")]
-    public bool logOnlyWhenChanged = true;
 
-    // estado
-    public int CurrentActiveCount { get; private set; }
+    // estado simples
+    public int LastActivatedCount { get; private set; }
 
-    private int lastLoggedCount = int.MinValue;
+    private bool tagChecked = false;
+    private bool tagExists = true;
 
     void Start()
     {
-        // validar
-        if (maxActive < 1) maxActive = 1;
-
-        if (updateInterval > 0f)
-            InvokeRepeating(nameof(EnforceNow), 0f, updateInterval);
-        else
-            EnforceNow();
+        EnforceNow();
     }
 
     void OnValidate()
     {
-        if (maxActive < 1) maxActive = 1;
-        // se alterar pelo Inspector durante Play e updateInterval == 0, aplica imediatamente
-        if (Application.isPlaying && updateInterval <= 0f)
-            EnforceNow();
+        if (maxToActivate < 0) maxToActivate = 0;
     }
 
-    /// <summary>
-    /// Enforce agora: busca todos os GameObjects (incluindo inativos),
-    /// filtra pela tag e aplica o limite ativando/desativando conforme necessário.
-    /// </summary>
-    [ContextMenu("Enforce Now")]
-    public void EnforceNow()
+    private void CheckTagOnce()
     {
+        if (tagChecked) return;
+        tagChecked = true;
+
         if (string.IsNullOrEmpty(tagToManage))
         {
-            CurrentActiveCount = 0;
-            if (enableDebug) Debug.Log("[TagActivatorWithLimit] tagToManage está vazia.");
+            tagExists = false;
+            if (enableDebug) Debug.LogWarning("[Identificador] tagToManage está vazia.");
             return;
         }
 
         try
         {
-            // FindObjectsOfType<GameObject>(true) retorna objetos incluindo inativos (Unity 2020+)
-            GameObject[] all = FindObjectsOfType<GameObject>(true);
-
-            List<GameObject> tagged = new List<GameObject>(16);
-            for (int i = 0; i < all.Length; i++)
-            {
-                GameObject go = all[i];
-                // CompareTag é mais rápido e evita exceção quando tag não existe?
-                // Note: se a tag não existir, CompareTag lança exceção, então protegemos abaixo.
-                try
-                {
-                    if (go.CompareTag(tagToManage))
-                        tagged.Add(go);
-                }
-                catch (UnityException)
-                {
-                    // tag não existe no projeto
-                    if (enableDebug) Debug.LogWarning($"[TagActivatorWithLimit] A tag '{tagToManage}' não existe no projeto (verifique Tags & Layers).");
-                    CurrentActiveCount = 0;
-                    return;
-                }
-            }
-
-            // conta ativos
-            int activeCount = 0;
-            for (int i = 0; i < tagged.Count; i++)
-                if (tagged[i].activeInHierarchy) activeCount++;
-
-            // se houver mais ativos do que o permitido -> desativar extras (se enforceHardLimit)
-            if (enforceHardLimit && activeCount > maxActive)
-            {
-                // desativa excedentes — começa do fim da lista para não afetar índices iniciais
-                for (int i = tagged.Count - 1; i >= 0 && activeCount > maxActive; i--)
-                {
-                    GameObject go = tagged[i];
-                    if (go.activeInHierarchy)
-                    {
-                        go.SetActive(false);
-                        activeCount--;
-                        if (enableDebug) Debug.Log($"[TagActivatorWithLimit] Desativado (excedente) -> {go.name}");
-                    }
-                }
-            }
-
-            // se houver menos ativos do que o permitido -> ativar inativos até o limite
-            if (activeCount < maxActive)
-            {
-                for (int i = 0; i < tagged.Count && activeCount < maxActive; i++)
-                {
-                    GameObject go = tagged[i];
-                    if (!go.activeInHierarchy)
-                    {
-                        go.SetActive(true);
-                        activeCount++;
-                        if (enableDebug) Debug.Log($"[TagActivatorWithLimit] Ativado -> {go.name}");
-                    }
-                }
-            }
-
-            CurrentActiveCount = activeCount;
-
-            if (enableDebug)
-            {
-                if (!logOnlyWhenChanged || CurrentActiveCount != lastLoggedCount)
-                {
-                    Debug.Log($"[TagActivatorWithLimit] Tag='{tagToManage}' TotalEncontrados={tagged.Count}, AtivosAgora={CurrentActiveCount} (maxActive={maxActive})");
-                    lastLoggedCount = CurrentActiveCount;
-                }
-            }
+            gameObject.CompareTag(tagToManage);
+            tagExists = true;
         }
-        catch (System.Exception ex)
+        catch
         {
-            CurrentActiveCount = 0;
-            Debug.LogError($"[TagActivatorWithLimit] Exceção ao processar tag '{tagToManage}': {ex.Message}\n{ex.StackTrace}");
+            tagExists = false;
+            if (enableDebug) Debug.LogWarning($"[Identificador] A tag '{tagToManage}' não existe no projeto (Tags & Layers).");
         }
     }
 
-    // --- NOVOS MÉTODOS ADICIONADOS ---
+    [ContextMenu("Enforce Now")]
+    public void EnforceNow()
+    {
+        if (!tagChecked) CheckTagOnce();
+        if (!tagExists) return;
 
-    // Desativa um GameObject específico (se ele tiver a tag gerenciada)
+        GameObject[] all = FindObjectsOfType<GameObject>(true);
+        List<GameObject> toActivate = new List<GameObject>(32);
+
+        for (int i = 0; i < all.Length; i++)
+        {
+            var go = all[i];
+            if (go == null) continue;
+
+            try
+            {
+                if (go.CompareTag(tagToManage) && !go.activeInHierarchy)
+                    toActivate.Add(go);
+            }
+            catch (UnityException)
+            {
+                if (enableDebug) Debug.LogWarning($"[Identificador] Tag '{tagToManage}' não existe no projeto.");
+                return;
+            }
+        }
+
+        LastActivatedCount = 0;
+
+        if (staggerInterval > 0f)
+        {
+            StartCoroutine(ActivateStaggered(toActivate));
+            return;
+        }
+
+        int limit = (maxToActivate <= 0) ? int.MaxValue : maxToActivate;
+        for (int i = 0; i < toActivate.Count && LastActivatedCount < limit; i++)
+        {
+            var go = toActivate[i];
+            if (go == null) continue;
+            EnsureParentsActive(go);
+            go.SetActive(true);
+            LastActivatedCount++;
+            if (enableDebug) Debug.Log($"[Identificador] Ativado -> {go.name}");
+        }
+
+        if (enableDebug) Debug.Log($"[Identificador] EnforceNow: tentou ativar {toActivate.Count} encontrados, ativados agora={LastActivatedCount}");
+    }
+
+    private IEnumerator ActivateStaggered(List<GameObject> list)
+    {
+        int limit = (maxToActivate <= 0) ? int.MaxValue : maxToActivate;
+        for (int i = 0; i < list.Count && LastActivatedCount < limit; i++)
+        {
+            var go = list[i];
+            if (go == null) continue;
+            EnsureParentsActive(go);
+            go.SetActive(true);
+            LastActivatedCount++;
+            if (enableDebug) Debug.Log($"[Identificador] Ativado (staggered) -> {go.name}");
+            yield return new WaitForSeconds(staggerInterval);
+        }
+
+        if (enableDebug) Debug.Log($"[Identificador] ActivateStaggered: total ativados={LastActivatedCount}");
+    }
+
+    // --- METHODS FOR COMPATIBILITY WITH GridManager ---
+
+    // Desativa um GameObject específico (compatível com chamadas externas)
     public void DeactivateGameObject(GameObject go)
     {
         if (go == null) return;
+        if (!tagChecked) CheckTagOnce();
+        if (!tagExists) return;
 
         try
         {
-            if (!string.IsNullOrEmpty(tagToManage) && go.CompareTag(tagToManage))
+            if (go.CompareTag(tagToManage))
             {
                 if (go.activeInHierarchy)
                 {
                     go.SetActive(false);
-                    // atualiza contador (não confie só no EnforceNow imediato)
-                    CurrentActiveCount = Mathf.Max(0, CurrentActiveCount - 1);
-                    if (enableDebug) Debug.Log($"[TagActivatorWithLimit] Deactivated specific -> {go.name}");
+                    // Recalcula para manter consistência
+                    EnforceNow();
+                    if (enableDebug) Debug.Log($"[Identificador] Deactivated specific -> {go.name}");
                 }
                 else if (enableDebug)
                 {
-                    Debug.Log($"[TagActivatorWithLimit] O objeto já estava inativo -> {go.name}");
+                    Debug.Log($"[Identificador] O objeto já estava inativo -> {go.name}");
                 }
             }
             else if (enableDebug)
             {
-                Debug.Log($"[TagActivatorWithLimit] DeactivateGameObject: objeto não tem a tag '{tagToManage}' -> {go.name}");
+                Debug.Log($"[Identificador] DeactivateGameObject: objeto não tem a tag '{tagToManage}' -> {go.name}");
             }
         }
         catch (UnityException)
         {
-            if (enableDebug) Debug.LogWarning($"[TagActivatorWithLimit] Tag '{tagToManage}' não existe no projeto.");
+            if (enableDebug) Debug.LogWarning($"[Identificador] Tag '{tagToManage}' não existe no projeto.");
         }
     }
 
-    // Ativa o próximo GameObject com a mesma tag após delay (procura um inativo e ativa)
+    // Coroutine compatível: ativa o próximo objeto inativo com a tag após delay
     public IEnumerator ActivateNextWithTagAfter(string tag, float delay)
     {
         yield return new WaitForSeconds(delay);
 
         if (string.IsNullOrEmpty(tag))
         {
-            if (enableDebug) Debug.LogWarning("[TagActivatorWithLimit] ActivateNextWithTagAfter: tag vazia.");
+            if (enableDebug) Debug.LogWarning("[Identificador] ActivateNextWithTagAfter: tag vazia.");
             yield break;
         }
 
@@ -191,29 +175,62 @@ public class Identificador : MonoBehaviour
             for (int i = 0; i < all.Length; i++)
             {
                 var go = all[i];
+                if (go == null) continue;
                 try
                 {
                     if (go.CompareTag(tag) && !go.activeInHierarchy)
                     {
+                        EnsureParentsActive(go);
                         go.SetActive(true);
-                        CurrentActiveCount++;
-                        if (enableDebug) Debug.Log($"[TagActivatorWithLimit] Ativado after delay -> {go.name}");
+                        LastActivatedCount++;
+                        if (enableDebug) Debug.Log($"[Identificador] Ativado after delay -> {go.name}");
                         yield break;
                     }
                 }
                 catch (UnityException)
                 {
-                    if (enableDebug) Debug.LogWarning($"[TagActivatorWithLimit] Tag '{tag}' não existe no projeto.");
+                    if (enableDebug) Debug.LogWarning($"[Identificador] Tag '{tag}' não existe no projeto.");
                     yield break;
                 }
             }
 
-            // se não encontrou nenhum inativo, chama EnforceNow para garantir consistência
+            // se não encontrou nenhum inativo, revalida o estado
             EnforceNow();
         }
         catch (System.Exception ex)
         {
-            Debug.LogError($"[TagActivatorWithLimit] Erro em ActivateNextWithTagAfter: {ex.Message}");
+            Debug.LogError($"[Identificador] Erro em ActivateNextWithTagAfter: {ex.Message}");
         }
+    }
+
+    // --- helpers ---
+    private void EnsureParentsActive(GameObject go)
+    {
+        Transform t = go.transform.parent;
+        Stack<Transform> stack = null;
+        while (t != null)
+        {
+            if (!t.gameObject.activeSelf)
+            {
+                if (stack == null) stack = new Stack<Transform>();
+                stack.Push(t);
+            }
+            t = t.parent;
+        }
+
+        if (stack != null)
+        {
+            while (stack.Count > 0)
+            {
+                var p = stack.Pop();
+                p.gameObject.SetActive(true);
+            }
+        }
+    }
+
+    // helper público se quiser chamar por outro script sem coroutine
+    public void ActivateNextWithTagAfterDelayed(string tag, float delay)
+    {
+        StartCoroutine(ActivateNextWithTagAfter(tag, delay));
     }
 }

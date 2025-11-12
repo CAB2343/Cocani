@@ -192,4 +192,33 @@ public class MiniGameController : MonoBehaviour
 
         prevPlayerRootStored = false;
     }
+
+    // =========================
+    // Small API additions below
+    // Call these from your game logic when the minigame finishes
+    // =========================
+
+    /// <summary>
+    /// Deve ser chamado quando o jogador vencer o minigame.
+    /// Dispara o evento de vitória e fecha o minigame.
+    /// </summary>
+    public void DeclareVictory()
+    {
+        Debug.Log("MiniGameController: DeclareVictory called.");
+        // dispara o evento global (classe MiniGameResultEvents esperada no projeto)
+        MiniGameResultEvents.RaiseVictory();
+        // fecha o minigame (restaura estado)
+        Close();
+    }
+
+    /// <summary>
+    /// Deve ser chamado quando o jogador perder o minigame.
+    /// Dispara o evento de derrota e fecha o minigame.
+    /// </summary>
+    public void DeclareDefeat()
+    {
+        Debug.Log("MiniGameController: DeclareDefeat called.");
+        MiniGameResultEvents.RaiseDefeat();
+        Close();
+    }
 }
