@@ -287,6 +287,10 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8678410037837344225, guid: 50d6f483165c35944b5b0236ac910126, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 9060074465066596259, guid: 50d6f483165c35944b5b0236ac910126, type: 3}
       propertyPath: RoomPrefabs.Array.size
       value: 3
