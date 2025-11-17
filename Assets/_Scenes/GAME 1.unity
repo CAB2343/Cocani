@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 697dcc1a69e1a2c4ea5db483875ede85, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
+  m_IndirectSpecularColor: {r: 0.029721849, g: 0.017746871, b: 0.019853447, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -123,11 +123,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &5169969 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3687667257190151914, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
-  m_PrefabInstance: {fileID: 214571212}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &70823321
 GameObject:
   m_ObjectHideFlags: 0
@@ -312,67 +307,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 50d6f483165c35944b5b0236ac910126, type: 3}
---- !u!1001 &214571212
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 2511238984823371003, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -510.81738
-      objectReference: {fileID: 0}
-    - target: {fileID: 2511238984823371003, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -224.28773
-      objectReference: {fileID: 0}
-    - target: {fileID: 2511238984823371003, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -25.96498
-      objectReference: {fileID: 0}
-    - target: {fileID: 2511238984823371003, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2511238984823371003, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2511238984823371003, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2511238984823371003, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2511238984823371003, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2511238984823371003, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2511238984823371003, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7476114951318129843, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
-      propertyPath: m_Name
-      value: MINIGAME DAS LETRAS
-      objectReference: {fileID: 0}
-    - target: {fileID: 7476114951318129843, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
 --- !u!1001 &490095542
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1166,8 +1100,8 @@ MonoBehaviour:
   referenceCamera: {fileID: 963194227}
   player: {fileID: 1078356539}
   objectivePrefabs:
-  - {fileID: 5169969}
-  objectiveTag: minigame
+  - {fileID: 0}
+  objectiveTag: AreaMinigame
   smoothSpeed: 8
   detectInterval: 0.5
   clampToBar: 1
@@ -1482,7 +1416,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b6e9e438baf5714dbc4b77bacac37f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cameraPosition: {fileID: 1582374448}
+  cameraPosition: {fileID: 963194228}
 --- !u!1 &996350032
 GameObject:
   m_ObjectHideFlags: 0
@@ -2094,6 +2028,7 @@ Transform:
   m_Children:
   - {fileID: 1205992615}
   - {fileID: 2020441640}
+  - {fileID: 1327697326}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!224 &1244041019 stripped
@@ -2235,6 +2170,55 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1254945146}
   m_CullTransparentMesh: 1
+--- !u!1 &1327697325
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1327697326}
+  - component: {fileID: 1327697327}
+  m_Layer: 0
+  m_Name: Identificador
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1327697326
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1327697325}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1225208337}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1327697327
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1327697325}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4e70842c1784a0488c13a3b1ff9eda5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetTag: AreaMinigame
+  respawnDelay: 5
+  reactToVictory: 1
+  reactToDefeat: 1
+  manageAllWithTag: 1
 --- !u!1 &1407046804
 GameObject:
   m_ObjectHideFlags: 0
@@ -2746,4 +2730,3 @@ SceneRoots:
   - {fileID: 996350034}
   - {fileID: 1017316850}
   - {fileID: 880961457}
-  - {fileID: 214571212}

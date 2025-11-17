@@ -45,6 +45,15 @@ public class GridManager : MonoBehaviour
     public UnityEvent onTrioChanged;
     public UnityEvent onGridReady;
 
+    // --- CAMPOS ADICIONADOS ---
+    [Header("Identificador (Tag manager)")]
+    [Tooltip("Arraste aqui o objeto que possui o componente Identificador")]
+    public Identificador identificador;
+    // o GameObject que o jogador interagiu (deve ser definido pelo seu código de interação antes de iniciar o minigame)
+    [HideInInspector]
+    public GameObject lastInteractedObject;
+    // --- FIM DOS CAMPOS ADICIONADOS ---
+
     private Cell[,] grid;
     private Cell[] fixedTrioCells = new Cell[3];
     private Coroutine shuffleCoroutine;
@@ -55,41 +64,41 @@ public class GridManager : MonoBehaviour
 
     private bool miniGameLocked = false;
 
-void Awake()
-{
-
-    if (container == null)
+    void Awake()
     {
-        container = GetComponent<RectTransform>();
 
         if (container == null)
         {
-            var go = new GameObject("GridContainer", typeof(RectTransform));
-            go.transform.SetParent(transform, false);
-            container = go.GetComponent<RectTransform>();
+            container = GetComponent<RectTransform>();
+
+            if (container == null)
+            {
+                var go = new GameObject("GridContainer", typeof(RectTransform));
+                go.transform.SetParent(transform, false);
+                container = go.GetComponent<RectTransform>();
+            }
         }
-    }
 
 
-    if (cellPrefab == null)
-    {
-        // tenta achar prefab por tag
-        var go = GameObject.FindGameObjectWithTag("CellPrefab");
-        if (go != null) cellPrefab = go;
-
-        // tenta carregar de Resources (Assets/Resources/Cell.prefab)
-        if (cellPrefab == null)
-            cellPrefab = Resources.Load<GameObject>("Cell");
-
-        // último caso: cria um quadradinho simples
         if (cellPrefab == null)
         {
-            cellPrefab = new GameObject("AutoCell", typeof(RectTransform), typeof(Image), typeof(Cell));
-            var img = cellPrefab.GetComponent<Image>();
-            img.color = Color.gray;
+            // tenta achar prefab por tag
+            var go = GameObject.FindGameObjectWithTag("CellPrefab");
+            if (go != null) cellPrefab = go;
+
+            // tenta carregar de Resources (Assets/Resources/Cell.prefab)
+            if (cellPrefab == null)
+                cellPrefab = Resources.Load<GameObject>("Cell");
+
+            // último caso: cria um quadradinho simples
+            if (cellPrefab == null)
+            {
+                cellPrefab = new GameObject("AutoCell", typeof(RectTransform), typeof(Image), typeof(Cell));
+                var img = cellPrefab.GetComponent<Image>();
+                img.color = Color.gray;
+            }
         }
     }
-}
 
 
 
@@ -384,6 +393,15 @@ void Awake()
         }
     }
 
+    // --- MÉTODO ADICIONADO ---
+    // Chame isto a partir do script que detecta o clique/interação no objeto do mundo
+    public void SetInteractedObject(GameObject go)
+    {
+        lastInteractedObject = go;
+    }
+    // --- FIM DO MÉTODO ADICIONADO ---
+
+
     // -------- player column methods --------
     public int GetRows() => rows;
     public int GetCols() => cols;
@@ -502,6 +520,27 @@ void Awake()
                 Debug.Log($"  Success painted player column cell index {i}");
             }
         }
+
+        // --- LÓGICA ADICIONADA ---
+        // após o loop que pinta as células (no final de MiniGameSuccess) adicione:
+        if (identificador != null && lastInteractedObject != null)
+        {
+            // desativa o objeto que o jogador interagiu
+            identificador.DeactivateGameObject(lastInteractedObject);
+
+            // opcional: ativa outro objeto com a mesma tag após X segundos
+            // aqui uso 5s de exemplo — ajuste conforme precisar
+            float reactivateDelay = 5f;
+            StartCoroutine(identificador.ActivateNextWithTagAfter(identificador.tagToManage, reactivateDelay));
+        }
+        else
+        {
+            if (identificador == null)
+                Debug.LogWarning("GridManager: identificador não atribuído (no Inspector).");
+            else
+                Debug.Log("GridManager: lastInteractedObject é null — nada para desativar.");
+        }
+        // --- FIM DA LÓGICA ADICIONADA ---
     }
 
     /// <summary>
