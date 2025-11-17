@@ -6,13 +6,24 @@ using UnityEngine.EventSystems;
 
 public class GameManager : MonoBehaviour
 {
+    // ============================================================
+    // ==                   REFERÊNCIAS DE UI                    ==
+    // ============================================================
     [Header("Referências UI")]
-    public GameObject minigamePanel;         // Painel do minigame (com o botão e área de filtro)
-    public Button startButton;               // Botão “Iniciar Limpeza”
-    public RectTransform filterArea;         // Área onde as partículas aparecem
-    public GameObject dustParticlePrefab;    // Prefab das partículas
-    public Text scoreText;                   // Texto de pontuação
+    public GameObject minigamePanel;
+    public Button startButton;
+    public RectTransform filterArea;
+    public GameObject dustParticlePrefab;
+    public Text scoreText;
 
+    [Header("Efeitos Visuais da Cutscene")]
+    public RedFade redFade;
+    public VignetteController vignetteController;
+    public GameObject warningUI;
+
+    // ============================================================
+    // ==                   MINIGAME CONFIG                      ==
+    // ============================================================
     [Header("Configurações de Partículas")]
     public Vector2 particleSizeRange = new Vector2(25f, 45f);
     public float particleLifetime = 2.5f;
@@ -22,29 +33,138 @@ public class GameManager : MonoBehaviour
     private bool isGameRunning = false;
     private List<GameObject> activeParticles = new List<GameObject>();
 
+    // ============================================================
+    // ==                SISTEMA DE COMBUSTÍVEL / MORTE          ==
+    // ============================================================
+    [Header("Combustível / Morte")]
+    public float currentFuel = 100f;
+    public float fuelDecayRate = 2f;
+    public bool isDead = false;
+
+    // ============================================================
+    // ==                 COMPONENTES DA CUTSCENE                 ==
+    // ============================================================
+    [Header("Cutscene de Morte")]
+    public CameraShakeDeath deathShake;
+    public Light emergencyLight;
+    public AudioSource alarmSource;
+    public GameOverManager gameOverManager;
+    public CameraFall cameraFall;
+
+    // ============================================================
+    // ==                         START                           ==
+    // ============================================================
     void Start()
     {
-        // Garante que o painel do minigame esteja visível no início
         if (minigamePanel != null)
-            minigamePanel.SetActive(true);
+        minigamePanel.SetActive(false);
 
-        // Configura o botão "Iniciar Limpeza"
         if (startButton != null)
         {
             startButton.onClick.AddListener(() =>
             {
                 StartGame();
                 if (minigamePanel != null)
-                    minigamePanel.SetActive(false); // Oculta o painel ao iniciar
+                    minigamePanel.SetActive(false);
             });
         }
 
         EnsureEventSystem();
     }
 
-    // =============================================================
-    // ==            INÍCIO E LÓGICA DO MINIGAME                  ==
-    // =============================================================
+    // ============================================================
+    // ==                         UPDATE                          ==
+    // ============================================================
+    void Update()
+    {
+        if (!isDead)
+            FuelDecayLogic();
+
+        // TESTE DE MORTE: apertar K para ver a cutscene
+        if (Input.GetKeyDown(KeyCode.K) && !isDead)
+        {
+            StartCoroutine(DeathSequence());
+        }
+    }
+
+    // ============================================================
+    // ==     DIMINUIÇÃO DE COMBUSTÍVEL / DISPARO DE MORTE       ==
+    // ============================================================
+    void FuelDecayLogic()
+    {
+        currentFuel -= fuelDecayRate * Time.deltaTime;
+
+        if (currentFuel <= 0 && !isDead)
+        {
+            StartCoroutine(DeathSequence());
+        }
+    }
+
+    // ============================================================
+    // ==                  CUTSCENE COMPLETA DE MORTE             ==
+    // ============================================================
+    IEnumerator DeathSequence()
+    {
+        isDead = true;
+        Debug.Log("[GameManager] Cutscene de morte iniciada.");
+
+        Debug.Log("=== DEBUG REDFADE ===");
+        Debug.Log("Objeto atribuído ao redFade: " + redFade.gameObject.name);
+        Debug.Log("Tem componente Image? " + (redFade.GetComponent<Image>() != null));
+
+
+        // WARNING ON
+        if (warningUI != null)
+            warningUI.SetActive(true);
+
+        // TELA VERMELHA FADE
+        // ATIVA O OBJETO PAI QUE TEM O REDOVERLAY
+        if (redFade != null)
+        {
+            GameObject overlay = redFade.gameObject;
+
+            Debug.Log("Ativando RedOverlay: " + overlay.name);
+
+            overlay.SetActive(true);   // <-- ATIVA AGORA
+            yield return null;         // <-- espera 1 frame
+
+            redFade.Initialize();      // <-- reconhece o Image agora
+            StartCoroutine(redFade.FadeIn(0.5f));
+        }
+
+
+
+        // VIGNETTE
+        if (vignetteController != null)
+            StartCoroutine(vignetteController.IncreaseVignette(0.3f));
+
+        // LUZ DE EMERGÊNCIA
+        if (emergencyLight != null)
+            emergencyLight.gameObject.SetActive(true);
+
+        // SOM DE ALARME
+        if (alarmSource != null)
+            alarmSource.Play();
+
+        // TREPIDAÇÃO DA MORTE
+        if (deathShake != null)
+            deathShake.StartDeathShake(3f, 0.4f);
+
+        // CÂMERA CAINDO
+        if (cameraFall != null)
+            StartCoroutine(cameraFall.Fall(1f));
+
+        // Espera a cutscene inteira acontecer
+        yield return new WaitForSeconds(4f);
+
+        // GAME OVER NO FINAL (IMPORTANTÍSSIMO)
+        if (gameOverManager != null)
+            gameOverManager.ShowGameOverScreen();
+    }
+
+    // ============================================================
+    // ==                       MINIGAME                          ==
+    // ============================================================
     public void StartGame()
     {
         if (filterArea == null || dustParticlePrefab == null)
@@ -64,9 +184,6 @@ public class GameManager : MonoBehaviour
         Debug.Log("[GameManager] Minigame iniciado!");
     }
 
-    // =============================================================
-    // ==                   SPAWN DE PARTÍCULAS                   ==
-    // =============================================================
     IEnumerator SpawnParticles()
     {
         while (isGameRunning)
@@ -105,7 +222,6 @@ public class GameManager : MonoBehaviour
         if (img == null) img = particleGO.AddComponent<Image>();
         img.raycastTarget = true;
 
-        // Adiciona handler de clique
         ParticleClickHandler handler = particleGO.GetComponent<ParticleClickHandler>();
         if (handler == null) handler = particleGO.AddComponent<ParticleClickHandler>();
         handler.gameManagerRef = this;
@@ -117,6 +233,7 @@ public class GameManager : MonoBehaviour
     IEnumerator RemoveParticleAfterDelay(GameObject particle, float delay)
     {
         yield return new WaitForSecondsRealtime(delay);
+
         if (particle != null)
         {
             activeParticles.Remove(particle);
@@ -142,13 +259,12 @@ public class GameManager : MonoBehaviour
             scoreText.text = $"Poeira limpa: {score}";
     }
 
-    // =============================================================
-    // ==                   SUPORTE AO PAUSE                      ==
-    // =============================================================
+    // ============================================================
+    // ==                    CANVAS / EVENTOS                     ==
+    // ============================================================
     public void PauseGame()
     {
         isGameRunning = false;
-        Debug.Log("[GameManager] Jogo pausado.");
     }
 
     public void UnpauseGame()
@@ -157,13 +273,9 @@ public class GameManager : MonoBehaviour
         {
             isGameRunning = true;
             StartCoroutine(SpawnParticles());
-            Debug.Log("[GameManager] Jogo retomado.");
         }
     }
 
-    // =============================================================
-    // ==                 AJUSTES DE CANVAS E EVENTOS              ==
-    // =============================================================
     void EnsureCanvasSetup()
     {
         Canvas canvas = filterArea.GetComponentInParent<Canvas>();
@@ -182,7 +294,6 @@ public class GameManager : MonoBehaviour
         if (FindObjectOfType<EventSystem>() == null)
         {
             new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
-            Debug.Log("[GameManager] EventSystem criado automaticamente.");
         }
     }
 }

@@ -53,20 +53,27 @@ public class GameOverManager : MonoBehaviour
         { 
             gameOverPanel.SetActive(true); 
             // Opcional: Pausar o jogo 
-            Time.timeScale = 0f; 
+            // Time.timeScale = 0f; 
         } 
-    } 
+    }
 
     // Chama este método para esconder a tela de Game Over 
-    public void HideGameOverScreen() 
-    { 
-        if (gameOverPanel != null) 
-        { 
-            gameOverPanel.SetActive(false); 
+    public void HideGameOverScreen()
+    {
+        if (gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(false);
             // Opcional: Retomar o jogo 
-            Time.timeScale = 1f; 
-        } 
+            Time.timeScale = 1f;
+        }
     } 
+
+    public void TriggerGameOverFromManager()
+    {
+        ShowGameOverScreen();
+    
+    }
+
 
     void RestartGame() 
     { 
