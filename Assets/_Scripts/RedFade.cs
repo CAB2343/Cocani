@@ -6,29 +6,52 @@ public class RedFade : MonoBehaviour
 {
     private Image img;
 
+    [Header("Opacidade Máxima do Vermelho (0 a 1)")]
+    [Range(0f, 1f)]
+    public float maxAlpha = 0.35f;   // valor ideal para ver o ambiente
+
     public void Initialize()
     {
         img = GetComponent<Image>();
-        Debug.Log("[RedFade] Initialize → achou Image? " + (img != null));
     }
 
     public IEnumerator FadeIn(float speed)
     {
-        Debug.Log("FadeIn START — ativo? " + gameObject.activeInHierarchy);
+        if (img == null)
+            yield break;
 
         Color c = img.color;
 
-        while (c.a < 0.8f)
+        // Fade até o maxAlpha configurado
+        while (c.a < maxAlpha)
         {
-            if (img == null)
-            {
-                Debug.LogError("IMG VIROU NULL NO MEIO DO FADE!");
-                yield break;
-            }
-
             c.a += Time.deltaTime * speed;
             img.color = c;
             yield return null;
         }
+
+        c.a = maxAlpha;
+        img.color = c;
+    }
+
+    public IEnumerator FadeOut(float speed)
+    {
+        if (img == null)
+            yield break;
+
+        Color c = img.color;
+
+        while (c.a > 0f)
+        {
+            c.a -= Time.deltaTime * speed;
+            img.color = c;
+            yield return null;
+        }
+
+        c.a = 0f;
+        img.color = c;
+
+        // Depois que some, desativa o objeto
+        gameObject.SetActive(false);
     }
 }

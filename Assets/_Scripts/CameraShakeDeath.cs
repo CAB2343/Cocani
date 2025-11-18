@@ -1,8 +1,10 @@
 using UnityEngine;
-using System.Collections;
 
 public class CameraShakeDeath : MonoBehaviour
 {
+    private bool shaking = false;
+    private float shakeDuration;
+    private float shakeIntensity;
     private Vector3 originalPos;
 
     void Start()
@@ -12,21 +14,34 @@ public class CameraShakeDeath : MonoBehaviour
 
     public void StartDeathShake(float duration, float intensity)
     {
-        StopAllCoroutines();
-        StartCoroutine(ShakeRoutine(duration, intensity));
+        shakeDuration = duration;
+        shakeIntensity = intensity;
+        shaking = true;
     }
 
-    IEnumerator ShakeRoutine(float duration, float intensity)
+    void Update()
     {
-        float timer = 0f;
-
-        while (timer < duration)
+        if (shaking)
         {
-            transform.localPosition = originalPos + Random.insideUnitSphere * intensity;
-            timer += Time.deltaTime;
-            yield return null;
+            if (shakeDuration > 0)
+            {
+                transform.localPosition = originalPos + Random.insideUnitSphere * shakeIntensity;
+                shakeDuration -= Time.deltaTime;
+            }
+            else
+            {
+                shaking = false;
+                transform.localPosition = originalPos;
+            }
         }
+    }
 
+    // ============================================================
+    // ==      FUNÇÃO NOVA — PARA O SHAKE IMEDIATAMENTE         ==
+    // ============================================================
+    public void StopShake()
+    {
+        shaking = false;
         transform.localPosition = originalPos;
     }
 }

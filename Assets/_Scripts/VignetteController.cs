@@ -23,4 +23,17 @@ public class VignetteController : MonoBehaviour
             yield return null;
         }
     }
+
+    public IEnumerator DecreaseVignette(float speed)
+    {
+        if (vignette == null) yield break;
+
+        while (vignette.intensity.value > 0f)
+        {
+            vignette.intensity.value -= Time.deltaTime * speed;
+            yield return null;
+        }
+
+        vignette.intensity.value = 0f;
+    }
 }

@@ -7,7 +7,7 @@ using UnityEngine.EventSystems;
 public class GameManager : MonoBehaviour
 {
     // ============================================================
-    // ==                   REFERÊNCIAS DE UI                    ==
+    // ==                   REFERÊNCIAS UI                        ==
     // ============================================================
     [Header("Referências UI")]
     public GameObject minigamePanel;
@@ -22,7 +22,7 @@ public class GameManager : MonoBehaviour
     public GameObject warningUI;
 
     // ============================================================
-    // ==                   MINIGAME CONFIG                      ==
+    // ==                   MINIGAME CONFIG                       ==
     // ============================================================
     [Header("Configurações de Partículas")]
     public Vector2 particleSizeRange = new Vector2(25f, 45f);
@@ -51,13 +51,11 @@ public class GameManager : MonoBehaviour
     public GameOverManager gameOverManager;
     public CameraFall cameraFall;
 
-    // ============================================================
-    // ==                         START                           ==
-    // ============================================================
+
     void Start()
     {
         if (minigamePanel != null)
-        minigamePanel.SetActive(false);
+            minigamePanel.SetActive(false);
 
         if (startButton != null)
         {
@@ -72,117 +70,135 @@ public class GameManager : MonoBehaviour
         EnsureEventSystem();
     }
 
-    // ============================================================
-    // ==                         UPDATE                          ==
-    // ============================================================
     void Update()
     {
         if (!isDead)
             FuelDecayLogic();
 
-        // TESTE DE MORTE: apertar K para ver a cutscene
+        // TESTE DE MORTE — K
         if (Input.GetKeyDown(KeyCode.K) && !isDead)
-        {
             StartCoroutine(DeathSequence());
-        }
     }
 
+
     // ============================================================
-    // ==     DIMINUIÇÃO DE COMBUSTÍVEL / DISPARO DE MORTE       ==
+    // ==  FUEL LOGIC                                             ==
     // ============================================================
     void FuelDecayLogic()
     {
         currentFuel -= fuelDecayRate * Time.deltaTime;
 
         if (currentFuel <= 0 && !isDead)
-        {
             StartCoroutine(DeathSequence());
-        }
     }
 
+
     // ============================================================
-    // ==                  CUTSCENE COMPLETA DE MORTE             ==
+    // ==  SEQUÊNCIA DE MORTE COMPLETA                            ==
     // ============================================================
     IEnumerator DeathSequence()
     {
         isDead = true;
         Debug.Log("[GameManager] Cutscene de morte iniciada.");
 
-        Debug.Log("=== DEBUG REDFADE ===");
-        Debug.Log("Objeto atribuído ao redFade: " + redFade.gameObject.name);
-        Debug.Log("Tem componente Image? " + (redFade.GetComponent<Image>() != null));
-
-
         // WARNING ON
         if (warningUI != null)
             warningUI.SetActive(true);
 
-        // TELA VERMELHA FADE
-        // ATIVA O OBJETO PAI QUE TEM O REDOVERLAY
+        // RED FADE — ATIVA, INICIALIZA E AUMENTA
         if (redFade != null)
         {
-            GameObject overlay = redFade.gameObject;
-
-            Debug.Log("Ativando RedOverlay: " + overlay.name);
-
-            overlay.SetActive(true);   // <-- ATIVA AGORA
-            yield return null;         // <-- espera 1 frame
-
-            redFade.Initialize();      // <-- reconhece o Image agora
+            redFade.gameObject.SetActive(true);
+            yield return null;
+            redFade.Initialize();
             StartCoroutine(redFade.FadeIn(0.5f));
         }
 
-
-
-        // VIGNETTE
+        // VIGNETTE — INCREASE
         if (vignetteController != null)
-            StartCoroutine(vignetteController.IncreaseVignette(0.3f));
+            StartCoroutine(vignetteController.IncreaseVignette(0.4f));
 
-        // LUZ DE EMERGÊNCIA
+        // EMERGENCY LIGHT
         if (emergencyLight != null)
             emergencyLight.gameObject.SetActive(true);
 
-        // SOM DE ALARME
+        // ALARM SOUND
         if (alarmSource != null)
             alarmSource.Play();
 
-        // TREPIDAÇÃO DA MORTE
+        // SHAKE
         if (deathShake != null)
             deathShake.StartDeathShake(3f, 0.4f);
 
-        // CÂMERA CAINDO
+        // CAMERA FALL
         if (cameraFall != null)
             StartCoroutine(cameraFall.Fall(1f));
 
-        // Espera a cutscene inteira acontecer
+        // Aguarda cutscene
         yield return new WaitForSeconds(4f);
 
-        // GAME OVER NO FINAL (IMPORTANTÍSSIMO)
+        // LIMPA OS EFEITOS (FADE OUT)
+        ClearDeathEffects();
+
+        // Aguarda efeitos sumirem
+        yield return new WaitForSeconds(1f);
+
+        // SHOW GAME OVER POR ÚLTIMO
         if (gameOverManager != null)
             gameOverManager.ShowGameOverScreen();
     }
 
+
     // ============================================================
-    // ==                       MINIGAME                          ==
+    // ==  LIMPEZA DOS EFEITOS DA MORTE                           ==
+    // ============================================================
+    public void ClearDeathEffects()
+    {
+        // Warning desaparece
+        if (warningUI != null)
+            warningUI.SetActive(false);
+
+        // Luz apaga
+        if (emergencyLight != null)
+            emergencyLight.gameObject.SetActive(false);
+
+        // Alarme para
+        if (alarmSource != null)
+            alarmSource.Stop();
+
+        // Shake para
+        if (deathShake != null)
+            deathShake.StopShake();
+
+        // Fade out do vermelho
+        if (redFade != null)
+            StartCoroutine(redFade.FadeOut(0.7f));
+
+        // Fade out do vignette
+        if (vignetteController != null)
+            StartCoroutine(vignetteController.DecreaseVignette(0.7f));
+    }
+
+
+    // ============================================================
+    // ==  MINIGAME (SEM ALTERAÇÕES CRÍTICAS)                     ==
     // ============================================================
     public void StartGame()
     {
         if (filterArea == null || dustParticlePrefab == null)
         {
-            Debug.LogError("[GameManager] Faltando referências (FilterArea ou DustParticlePrefab).");
+            Debug.LogError("[GameManager] Faltando referências.");
             return;
         }
 
         EnsureCanvasSetup();
-
         score = 0;
         UpdateScoreUI();
 
         isGameRunning = true;
         StartCoroutine(SpawnParticles());
-
-        Debug.Log("[GameManager] Minigame iniciado!");
     }
+
 
     IEnumerator SpawnParticles()
     {
@@ -192,6 +208,7 @@ public class GameManager : MonoBehaviour
             yield return new WaitForSecondsRealtime(spawnInterval);
         }
     }
+
 
     void SpawnParticle()
     {
@@ -207,8 +224,6 @@ public class GameManager : MonoBehaviour
 
         float size = Random.Range(particleSizeRange.x, particleSizeRange.y);
         rect.sizeDelta = new Vector2(size, size);
-        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.pivot = new Vector2(0.5f, 0.5f);
 
         float halfWidth = (filterArea.rect.width - size) / 2f;
         float halfHeight = (filterArea.rect.height - size) / 2f;
@@ -220,15 +235,14 @@ public class GameManager : MonoBehaviour
 
         Image img = particleGO.GetComponent<Image>();
         if (img == null) img = particleGO.AddComponent<Image>();
-        img.raycastTarget = true;
 
-        ParticleClickHandler handler = particleGO.GetComponent<ParticleClickHandler>();
-        if (handler == null) handler = particleGO.AddComponent<ParticleClickHandler>();
+        ParticleClickHandler handler = particleGO.AddComponent<ParticleClickHandler>();
         handler.gameManagerRef = this;
         handler.particleGO = particleGO;
 
         StartCoroutine(RemoveParticleAfterDelay(particleGO, particleLifetime));
     }
+
 
     IEnumerator RemoveParticleAfterDelay(GameObject particle, float delay)
     {
@@ -240,6 +254,7 @@ public class GameManager : MonoBehaviour
             Destroy(particle);
         }
     }
+
 
     public void OnParticleClickedFromHandler(GameObject particle)
     {
@@ -253,32 +268,35 @@ public class GameManager : MonoBehaviour
         UpdateScoreUI();
     }
 
+
     void UpdateScoreUI()
     {
         if (scoreText != null)
             scoreText.text = $"Poeira limpa: {score}";
     }
 
+
     // ============================================================
-    // ==                    CANVAS / EVENTOS                     ==
+    // ==  FUNÇÕES DE PAUSA NECESSÁRIAS PARA PauseMenu           ==
     // ============================================================
     public void PauseGame()
     {
-        isGameRunning = false;
+        Time.timeScale = 0f;
     }
 
     public void UnpauseGame()
     {
-        if (!isGameRunning)
-        {
-            isGameRunning = true;
-            StartCoroutine(SpawnParticles());
-        }
+        Time.timeScale = 1f;
     }
 
+
+    // ============================================================
+    // ==  CANVAS + EVENT SYSTEM                                  ==
+    // ============================================================
     void EnsureCanvasSetup()
     {
         Canvas canvas = filterArea.GetComponentInParent<Canvas>();
+
         if (canvas != null)
         {
             if (canvas.renderMode == RenderMode.WorldSpace && canvas.worldCamera == null && Camera.main != null)
@@ -292,8 +310,6 @@ public class GameManager : MonoBehaviour
     void EnsureEventSystem()
     {
         if (FindObjectOfType<EventSystem>() == null)
-        {
             new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
-        }
     }
 }
