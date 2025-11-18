@@ -632,7 +632,7 @@ GameObject:
   - component: {fileID: 7746461340817194301}
   m_Layer: 0
   m_Name: Area-minigame
-  m_TagString: Untagged
+  m_TagString: AreaMinigame
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

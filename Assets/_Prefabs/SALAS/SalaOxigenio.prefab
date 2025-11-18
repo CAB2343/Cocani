@@ -13089,15 +13089,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2511238984823371003, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -506
+      value: 1.87
       objectReference: {fileID: 0}
     - target: {fileID: 2511238984823371003, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -223.9
+      value: -1.29
       objectReference: {fileID: 0}
     - target: {fileID: 2511238984823371003, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -8.3
+      value: 11.66
       objectReference: {fileID: 0}
     - target: {fileID: 2511238984823371003, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
       propertyPath: m_LocalRotation.w
@@ -13158,6 +13158,22 @@ PrefabInstance:
     - target: {fileID: 7476114951318129843, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
       propertyPath: m_Name
       value: MINIGAME DAS LETRAS
+      objectReference: {fileID: 0}
+    - target: {fileID: 7476114951318129843, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7681007218828491026, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -105.81
+      objectReference: {fileID: 0}
+    - target: {fileID: 7681007218828491026, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -23.218
+      objectReference: {fileID: 0}
+    - target: {fileID: 7681007218828491026, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -5.502
       objectReference: {fileID: 0}
     - target: {fileID: 7746461340817194301, guid: 543d4874e62b4d9409f36eab6e9eaab2, type: 3}
       propertyPath: m_Enabled
