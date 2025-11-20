@@ -329,7 +329,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5819055319466115206, guid: 50d6f483165c35944b5b0236ac910126, type: 3}
       propertyPath: m_Enabled
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8678410037837344225, guid: 50d6f483165c35944b5b0236ac910126, type: 3}
       propertyPath: m_IsActive
@@ -3287,7 +3287,7 @@ Transform:
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.92600024, z: 0.11000321}
+  m_LocalPosition: {x: 0, y: 0.92600024, z: 0.1100032}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6939,6 +6939,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1101370454}
     m_Modifications:
+    - target: {fileID: -8684817633071669928, guid: d9feea48bd5e0be46a4168cbaaad7830, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 501d3565568518542a0f0827fe5db4da, type: 2}
     - target: {fileID: -8679921383154817045, guid: d9feea48bd5e0be46a4168cbaaad7830, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.43474448
@@ -6991,6 +6995,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7788947594372425320, guid: d9feea48bd5e0be46a4168cbaaad7830, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 66b6df83618a72f4f873c59fcbe0b9c4, type: 2}
     - target: {fileID: -3321919801592875672, guid: d9feea48bd5e0be46a4168cbaaad7830, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -7003,6 +7011,14 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 0.08
       objectReference: {fileID: 0}
+    - target: {fileID: -2771249810493347087, guid: d9feea48bd5e0be46a4168cbaaad7830, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 4d7cc3daa4d252c40b2d9b94f147d5e3, type: 2}
+    - target: {fileID: -1616705979632656674, guid: d9feea48bd5e0be46a4168cbaaad7830, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 5b53ae6afd655e94dba0689678f03ef2, type: 2}
     - target: {fileID: 919132149155446097, guid: d9feea48bd5e0be46a4168cbaaad7830, type: 3}
       propertyPath: m_Name
       value: astrogirlDENOVO (1)
@@ -7015,6 +7031,10 @@ PrefabInstance:
       propertyPath: m_ApplyRootMotion
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7385161694172001518, guid: d9feea48bd5e0be46a4168cbaaad7830, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 2d025ae0f3ccba149a668a7390689a9f, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
