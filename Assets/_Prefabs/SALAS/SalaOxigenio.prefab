@@ -5012,7 +5012,7 @@ Transform:
   m_GameObject: {fileID: 2218170656190771314}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -41.898262, y: 13.24, z: -104.775734}
+  m_LocalPosition: {x: 581.4935, y: 0, z: -1620.3276}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -20179,6 +20179,9 @@ MonoBehaviour:
   localOffset: {x: 0, y: 0, z: 1}
   RoomPrefabs:
   - {fileID: 3207184152442675559, guid: 40bc2be89281728459d91b77f5bc82d9, type: 3}
+  - {fileID: 5578205765381458282, guid: d0a98ee8165bbb647bd2a6eb04fa702f, type: 3}
+  - {fileID: 826786270907585041, guid: 09874724cd79a0548945714b3d9eac2f, type: 3}
+  - {fileID: 4240574983736343893, guid: eb02e172999862345b1ba12e9f83db1e, type: 3}
   WallPrefab: {fileID: 0}
   creator: {fileID: 0}
   created: {fileID: 0}
