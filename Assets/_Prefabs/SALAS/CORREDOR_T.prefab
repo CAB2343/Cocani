@@ -1059,7 +1059,7 @@ MonoBehaviour:
   localOffset: {x: 0, y: 0, z: 1.77}
   RoomPrefabs:
   - {fileID: 3207184152442675559, guid: 40bc2be89281728459d91b77f5bc82d9, type: 3}
-  - {fileID: 158171014935687466, guid: b1a1f490a79ee934085d4d9ce967d9da, type: 3}
+  - {fileID: 4240574983736343893, guid: eb02e172999862345b1ba12e9f83db1e, type: 3}
   - {fileID: 826786270907585041, guid: 09874724cd79a0548945714b3d9eac2f, type: 3}
   - {fileID: 826786270907585041, guid: 09874724cd79a0548945714b3d9eac2f, type: 3}
   - {fileID: 2218170656190771314, guid: 446ec31613d9e594d97e684abd045bdd, type: 3}
@@ -3930,7 +3930,7 @@ MonoBehaviour:
   RoomPrefabs:
   - {fileID: 3207184152442675559, guid: 40bc2be89281728459d91b77f5bc82d9, type: 3}
   - {fileID: 826786270907585041, guid: 09874724cd79a0548945714b3d9eac2f, type: 3}
-  - {fileID: 158171014935687466, guid: b1a1f490a79ee934085d4d9ce967d9da, type: 3}
+  - {fileID: 4240574983736343893, guid: eb02e172999862345b1ba12e9f83db1e, type: 3}
   - {fileID: 2218170656190771314, guid: 446ec31613d9e594d97e684abd045bdd, type: 3}
   - {fileID: 4240574983736343893, guid: eb02e172999862345b1ba12e9f83db1e, type: 3}
   WallPrefab: {fileID: 0}

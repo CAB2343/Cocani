@@ -5,48 +5,41 @@ public class MinigameLimpeza : MonoBehaviour
     [Header("Referências")]
     public GameManager gameManager;          // Referência ao GameManager
     public GameObject minigameUI;            // Painel principal do minigame
-    public string playerTag = "Player";      // Tag do jogador
-
-    private bool playerInRange = false;
+    
+    [Header("Configuração Raycast")]
+    public float interactionDistance = 3f;   // Distância máxima para interagir
 
     void Update()
     {
-        if (playerInRange && Input.GetKeyDown(KeyCode.E))
+        // Verifica o input F primeiro para economizar processamento
+        if (Input.GetKeyDown(KeyCode.F))
         {
-            ActivateMinigame();
+            CheckInteraction();
         }
     }
 
-    void OnTriggerEnter(Collider other)
+    private void CheckInteraction()
     {
-        if (other.CompareTag(playerTag))
-        {
-            playerInRange = true;
-            Debug.Log("MinigameActivator: Jogador entrou no alcance de interação.");
-            // Aqui você pode mostrar um prompt tipo "Pressione E para interagir"
-        }
-    }
+        // Cria um raio saindo do centro da tela (Câmera Principal)
+        Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+        RaycastHit hit;
 
-    void OnTriggerExit(Collider other)
-    {
-        if (other.CompareTag(playerTag))
+        // Se o raio bater em algo dentro da distância limite
+        if (Physics.Raycast(ray, out hit, interactionDistance))
         {
-            playerInRange = false;
-            Debug.Log("MinigameActivator: Jogador saiu do alcance de interação.");
-            // Aqui você pode esconder o prompt
+            // Verifica se o objeto atingido é ESTE objeto
+            if (hit.transform == transform)
+            {
+                ActivateMinigame();
+            }
         }
     }
 
     public void ActivateMinigame()
     {
-        if (gameManager == null)
+        if (gameManager == null || minigameUI == null)
         {
-            Debug.LogError("MinigameActivator: GameManager não atribuído!");
-            return;
-        }
-        if (minigameUI == null)
-        {
-            Debug.LogError("MinigameActivator: MinigameUI não atribuído!");
+            Debug.LogError("MinigameLimpeza: Referências (GameManager ou UI) faltando!");
             return;
         }
 
@@ -57,16 +50,12 @@ public class MinigameLimpeza : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        Debug.Log("Minigame ativado!");
+        Debug.Log("Minigame ativado via Raycast!");
     }
 
     public void DeactivateMinigame()
     {
-        if (gameManager == null || minigameUI == null)
-        {
-            Debug.LogError("MinigameActivator: Referências faltando!");
-            return;
-        }
+        if (gameManager == null || minigameUI == null) return;
 
         minigameUI.SetActive(false);
         gameManager.UnpauseGame();
