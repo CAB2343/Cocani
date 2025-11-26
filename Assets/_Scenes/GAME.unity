@@ -5249,7 +5249,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   minigamePanel: {fileID: 1357634405}
-  startButton: {fileID: 0}
+  startButton: {fileID: 1492599027}
   filterArea: {fileID: 1525715534}
   dustParticlePrefab: {fileID: 4283037977135791361, guid: 6f08d4773df0c484981cb2db3d67dad4, type: 3}
   scoreText: {fileID: 263945512}
