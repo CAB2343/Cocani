@@ -1,86 +1,68 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using UnityEngine.Video;
-using TMPro;
 
 public class LevelLoader : MonoBehaviour
 {
     [Header("Configurações")]
     public VideoPlayer videoPlayer;
     public string nomeDaProximaCena;
-    [Range(0.1f, 2f)] public float velocidadeDoTexto = 0.5f;
 
     [Header("UI de Loading")]
-    public GameObject telaDeLoading;
-    public CanvasGroup canvasGroupLoading; // ARRASTE O OBJETO COM CANVAS GROUP AQUI
-    public TextMeshProUGUI textoPorcentagem;
+    public GameObject telaDeLoading; // O Painel que você criou
+    public Slider barraDeProgresso;
 
     void Start()
     {
-        // Garante que a tela comece desligada e invisível
-        if (telaDeLoading != null) telaDeLoading.SetActive(false);
-        if (canvasGroupLoading != null) canvasGroupLoading.alpha = 0;
-
-        // Configuração manual do vídeo
-        videoPlayer.playOnAwake = false;
-        videoPlayer.prepareCompleted += OnVideoPrepared;
+        // Avisa o script para rodar a função quando o vídeo acabar
         videoPlayer.loopPointReached += OnVideoEnd;
-        videoPlayer.Prepare();
-    }
-
-    void OnVideoPrepared(VideoPlayer vp)
-    {
-        vp.Play();
     }
 
     void OnVideoEnd(VideoPlayer vp)
     {
-        vp.loopPointReached -= OnVideoEnd;
-        StartCoroutine(CarregarCenaSuave());
+        StartCoroutine(CarregarCenaAsync());
     }
 
-    IEnumerator CarregarCenaSuave()
+    IEnumerator CarregarCenaAsync()
     {
-        // 1. Configurações iniciais
-        videoPlayer.targetCameraAlpha = 0; // Oculta vídeo
-        telaDeLoading.SetActive(true);     // Ativa objeto (mas ainda está invisível pelo Alpha 0)
-        
-        if(textoPorcentagem != null) textoPorcentagem.text = "0%";
+        // 1. Oculta o vídeo para não travar na última imagem
+        videoPlayer.targetCameraAlpha = 0; // Deixa o vídeo transparente
+        // ou use: videoPlayer.gameObject.SetActive(false); 
 
-        // 2. ANIMAÇÃO DE FADE IN (Duração: aprox. 0.5 segundos)
-        if (canvasGroupLoading != null)
-        {
-            canvasGroupLoading.alpha = 0f;
-            while (canvasGroupLoading.alpha < 1f)
-            {
-                canvasGroupLoading.alpha += Time.deltaTime * 2f; // Multiplique por 2 para ser rápido
-                yield return null;
-            }
-            canvasGroupLoading.alpha = 1f; // Garante que fique 100% visível
-        }
+        // 2. Ativa a tela de loading
+        telaDeLoading.SetActive(true);
+        barraDeProgresso.value = 0;
 
-        // 3. Inicia o carregamento da cena
-        float progressoVisual = 0f;
+        // 3. Inicia o carregamento, mas IMPEDE a troca automática de cena
         AsyncOperation operacao = SceneManager.LoadSceneAsync(nomeDaProximaCena);
-        operacao.allowSceneActivation = false;
+        operacao.allowSceneActivation = false; // Segura a cena nova na memória
 
-        while (progressoVisual < 1f)
+        // 4. Loop de carregamento
+        while (!operacao.isDone)
         {
+            // O progresso vai de 0 a 0.9 enquanto carrega
             float progressoReal = Mathf.Clamp01(operacao.progress / 0.9f);
-            progressoVisual = Mathf.MoveTowards(progressoVisual, progressoReal, Time.deltaTime * velocidadeDoTexto);
 
-            if(textoPorcentagem != null)
-                textoPorcentagem.text = (progressoVisual * 100).ToString("F0") + "%";
+            // Aumenta a barra visualmente (opcional: lerp para suavizar)
+            barraDeProgresso.value = progressoReal;
 
-            if (progressoVisual >= 0.99f && operacao.progress >= 0.9f)
+            // Se o carregamento técnico terminou (chegou a 0.9)
+            if (operacao.progress >= 0.9f)
             {
-                if(textoPorcentagem != null) textoPorcentagem.text = "100%";
-                yield return new WaitForSeconds(0.5f);
+                barraDeProgresso.value = 1f; // Enche a barra visualmente
+                
+                // Dica: Adicione um pequeno delay estético para o jogador ver o 100%
+                yield return new WaitForSeconds(1.0f); 
+
+                // Libera a troca de cena
                 operacao.allowSceneActivation = true;
             }
 
             yield return null;
         }
     }
+
+    
 }

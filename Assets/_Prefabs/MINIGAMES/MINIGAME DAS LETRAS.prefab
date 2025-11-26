@@ -682,7 +682,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3687667257190151914}
-  m_Enabled: 0
+  m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -1014,8 +1014,6 @@ MonoBehaviour:
   onGridReady:
     m_PersistentCalls:
       m_Calls: []
-  identificador: {fileID: 0}
-  lastInteractedObject: {fileID: 0}
 --- !u!1 &6791500577706805656
 GameObject:
   m_ObjectHideFlags: 0
