@@ -7,6 +7,7 @@ TagManager:
   - Room
   - minigame
   - AreaMinigame
+  - Interactable
   layers:
   - Default
   - TransparentFX

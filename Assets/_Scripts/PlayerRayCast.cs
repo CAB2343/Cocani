@@ -6,16 +6,18 @@ public class PlayerRayCast : MonoBehaviour
     public float distanciaDoRaio = 5f;
     public float alturaDoRaio = 0.80f;
     public KeyCode interactKey = KeyCode.F;
+    
+    // Nome da Tag que você deve colocar no objeto na Unity
+    public string tagInteracao = "Interactable"; 
 
     [Header("UI")]
     public GameObject promptUI; 
 
-    private InteractionZone objetoAtual;
+    private IInteractable objetoAtual; // Agora é genérico
 
     void Start()
     {
-        if (promptUI != null)
-            promptUI.SetActive(false);
+        if (promptUI != null) promptUI.SetActive(false);
     }
 
     void Update()
@@ -28,30 +30,29 @@ public class PlayerRayCast : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit, distanciaDoRaio))
         {
-            InteractionZone zone = hit.collider.GetComponent<InteractionZone>();
-
-            if (zone != null)
+            // 1. Verifica se a TAG está correta
+            if (hit.collider.CompareTag(tagInteracao))
             {
+                // 2. Tenta pegar qualquer script que tenha a interface IInteractable
+                IInteractable interactable = hit.collider.GetComponent<IInteractable>();
 
-                if (promptUI != null && objetoAtual != zone)
-                    promptUI.SetActive(true);
-
-                objetoAtual = zone;
-
-
-                if (Input.GetKeyDown(interactKey))
+                if (interactable != null)
                 {
-                    zone.Interact();
-                }
+                    if (promptUI != null && objetoAtual != interactable)
+                        promptUI.SetActive(true);
 
-                return;
+                    objetoAtual = interactable;
+
+                    if (Input.GetKeyDown(interactKey))
+                    {
+                        interactable.Interact();
+                    }
+                    return;
+                }
             }
         }
 
-        // Se não está olhando para nada interagível
-        if (promptUI != null)
-            promptUI.SetActive(false);
-
+        if (promptUI != null) promptUI.SetActive(false);
         objetoAtual = null;
     }
 }

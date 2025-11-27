@@ -4,8 +4,8 @@ using UnityEngine.UI;
 
 public class ParticleClickHandler : MonoBehaviour, IPointerClickHandler
 {
-    [HideInInspector] public GameManager gameManagerRef;
-    [HideInInspector] public GameObject particleGO;
+    // 🔥 Referência alterada para o novo Manager específico
+    [HideInInspector] public MinigameManager minigameManagerRef;
 
     private Image img;
 
@@ -17,23 +17,32 @@ public class ParticleClickHandler : MonoBehaviour, IPointerClickHandler
             img = gameObject.AddComponent<Image>();
         }
 
+        // Garante que a imagem receba cliques do mouse
         img.raycastTarget = true;
+    }
+
+    // Método auxiliar para o MinigameManager configurar a referência ao spawnar
+    public void SetManager(MinigameManager manager)
+    {
+        minigameManagerRef = manager;
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        // Agora funciona, pois isGameRunning é público
-        if (gameManagerRef != null && !gameManagerRef.isGameRunning)
+        // Verifica se o jogo está rodando através do novo Manager
+        if (minigameManagerRef != null && !minigameManagerRef.isGameRunning)
             return;
 
         Debug.Log($"[ParticleClickHandler] Clique detectado em {gameObject.name}");
 
-        if (gameManagerRef != null)
+        if (minigameManagerRef != null)
         {
-            gameManagerRef.OnParticleClickedFromHandler(gameObject);
+            // Chama a função de pontuação no novo Manager
+            minigameManagerRef.OnParticleClicked(gameObject);
         }
         else
         {
+            // Fallback de segurança caso perca a referência
             Destroy(gameObject);
         }
     }
