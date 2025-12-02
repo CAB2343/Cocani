@@ -30,7 +30,10 @@ public class GameManager : MonoBehaviour
     public float spawnInterval = 1f;
 
     private int score = 0;
-    private bool isGameRunning = false;
+
+    // 🔥 Agora é público para o ParticleClickHandler acessar
+    public bool isGameRunning = false;
+
     private List<GameObject> activeParticles = new List<GameObject>();
 
     // ============================================================
@@ -61,9 +64,7 @@ public class GameManager : MonoBehaviour
         {
             startButton.onClick.AddListener(() =>
             {
-                StartGame();
-                if (minigamePanel != null)
-                    minigamePanel.SetActive(false);
+                StartGame(); // agora não desativa o painel aqui
             });
         }
 
@@ -75,7 +76,6 @@ public class GameManager : MonoBehaviour
         if (!isDead)
             FuelDecayLogic();
 
-        // TESTE DE MORTE — K
         if (Input.GetKeyDown(KeyCode.K) && !isDead)
             StartCoroutine(DeathSequence());
     }
@@ -101,11 +101,9 @@ public class GameManager : MonoBehaviour
         isDead = true;
         Debug.Log("[GameManager] Cutscene de morte iniciada.");
 
-        // WARNING ON
         if (warningUI != null)
             warningUI.SetActive(true);
 
-        // RED FADE — ATIVA, INICIALIZA E AUMENTA
         if (redFade != null)
         {
             redFade.gameObject.SetActive(true);
@@ -114,36 +112,27 @@ public class GameManager : MonoBehaviour
             StartCoroutine(redFade.FadeIn(0.5f));
         }
 
-        // VIGNETTE — INCREASE
         if (vignetteController != null)
             StartCoroutine(vignetteController.IncreaseVignette(0.4f));
 
-        // EMERGENCY LIGHT
         if (emergencyLight != null)
             emergencyLight.gameObject.SetActive(true);
 
-        // ALARM SOUND
         if (alarmSource != null)
             alarmSource.Play();
 
-        // SHAKE
         if (deathShake != null)
             deathShake.StartDeathShake(3f, 0.4f);
 
-        // CAMERA FALL
         if (cameraFall != null)
             StartCoroutine(cameraFall.Fall(1f));
 
-        // Aguarda cutscene
         yield return new WaitForSeconds(4f);
 
-        // LIMPA OS EFEITOS (FADE OUT)
         ClearDeathEffects();
 
-        // Aguarda efeitos sumirem
         yield return new WaitForSeconds(1f);
 
-        // SHOW GAME OVER POR ÚLTIMO
         if (gameOverManager != null)
             gameOverManager.ShowGameOverScreen();
     }
@@ -154,34 +143,28 @@ public class GameManager : MonoBehaviour
     // ============================================================
     public void ClearDeathEffects()
     {
-        // Warning desaparece
         if (warningUI != null)
             warningUI.SetActive(false);
 
-        // Luz apaga
         if (emergencyLight != null)
             emergencyLight.gameObject.SetActive(false);
 
-        // Alarme para
         if (alarmSource != null)
             alarmSource.Stop();
 
-        // Shake para
         if (deathShake != null)
             deathShake.StopShake();
 
-        // Fade out do vermelho
         if (redFade != null)
             StartCoroutine(redFade.FadeOut(0.7f));
 
-        // Fade out do vignette
         if (vignetteController != null)
             StartCoroutine(vignetteController.DecreaseVignette(0.7f));
     }
 
 
     // ============================================================
-    // ==  MINIGAME (SEM ALTERAÇÕES CRÍTICAS)                     ==
+    // ==  MINIGAME                                               ==
     // ============================================================
     public void StartGame()
     {
@@ -190,6 +173,10 @@ public class GameManager : MonoBehaviour
             Debug.LogError("[GameManager] Faltando referências.");
             return;
         }
+
+        // 🔥 Agora o painel só some AQUI
+        if (minigamePanel != null)
+            minigamePanel.SetActive(false);
 
         EnsureCanvasSetup();
         score = 0;
@@ -277,7 +264,7 @@ public class GameManager : MonoBehaviour
 
 
     // ============================================================
-    // ==  FUNÇÕES DE PAUSA NECESSÁRIAS PARA PauseMenu           ==
+    // ==  FUNÇÕES DE PAUSA                                       ==
     // ============================================================
     public void PauseGame()
     {

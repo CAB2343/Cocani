@@ -16,16 +16,25 @@ public class ParticleClickHandler : MonoBehaviour, IPointerClickHandler
         {
             img = gameObject.AddComponent<Image>();
         }
+
         img.raycastTarget = true;
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
+        // Agora funciona, pois isGameRunning é público
+        if (gameManagerRef != null && !gameManagerRef.isGameRunning)
+            return;
+
         Debug.Log($"[ParticleClickHandler] Clique detectado em {gameObject.name}");
 
         if (gameManagerRef != null)
+        {
             gameManagerRef.OnParticleClickedFromHandler(gameObject);
+        }
         else
-            Destroy(gameObject); // fallback
+        {
+            Destroy(gameObject);
+        }
     }
 }
