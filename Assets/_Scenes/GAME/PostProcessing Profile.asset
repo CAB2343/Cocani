@@ -40,7 +40,7 @@ MonoBehaviour:
   active: 1
   intensity:
     m_OverrideState: 1
-    m_Value: 0.05
+    m_Value: 0.022
 --- !u!114 &-7994161311662449361
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -64,14 +64,14 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 21
   scatter:
-    m_OverrideState: 0
-    m_Value: 0.7
+    m_OverrideState: 1
+    m_Value: 0.638
   clamp:
     m_OverrideState: 0
     m_Value: 65472
   tint:
     m_OverrideState: 0
-    m_Value: {r: 0, g: 0.8301887, b: 0.81341094, a: 1}
+    m_Value: {r: 0.8962264, g: 0.14796188, b: 0.4440184, a: 1}
   highQualityFiltering:
     m_OverrideState: 0
     m_Value: 0
@@ -109,7 +109,7 @@ MonoBehaviour:
     m_Value: 20
   gaussianEnd:
     m_OverrideState: 1
-    m_Value: 50
+    m_Value: 45
   gaussianMaxRadius:
     m_OverrideState: 0
     m_Value: 1
@@ -212,7 +212,7 @@ MonoBehaviour:
     m_Value: 1.7
   contrast:
     m_OverrideState: 1
-    m_Value: 52
+    m_Value: 59.7
   colorFilter:
     m_OverrideState: 1
     m_Value: {r: 3.031433, g: 2.6453543, b: 2.6453543, a: 1}
@@ -221,7 +221,7 @@ MonoBehaviour:
     m_Value: 0
   saturation:
     m_OverrideState: 1
-    m_Value: 51
+    m_Value: 4.9
 --- !u!114 &-4143938085445877529
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -353,10 +353,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   active: 1
   shadows:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: {x: 1, y: 1, z: 1, w: 0}
   midtones:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: {x: 0.5026592, y: 0.9844849, z: 1, w: 0}
   highlights:
     m_OverrideState: 0
@@ -577,7 +577,7 @@ MonoBehaviour:
   active: 1
   lift:
     m_OverrideState: 1
-    m_Value: {x: 0.93691826, y: 0.963719, z: 1, w: 0}
+    m_Value: {x: 0.97690845, y: 0.9981478, z: 1, w: 0}
   gamma:
     m_OverrideState: 1
     m_Value: {x: 1, y: 0.9890663, z: 0.9853541, w: 0}
@@ -670,11 +670,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   active: 1
   shadows:
-    m_OverrideState: 0
-    m_Value: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+    m_OverrideState: 1
+    m_Value: {r: 1, g: 1, b: 1, a: 1}
   highlights:
     m_OverrideState: 0
-    m_Value: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+    m_Value: {r: 1, g: 1, b: 1, a: 1}
   balance:
-    m_OverrideState: 0
-    m_Value: 0
+    m_OverrideState: 1
+    m_Value: 66
