@@ -149,7 +149,7 @@ public class GridManager : MonoBehaviour
         gridLayout.spacing = new Vector2(spacing, spacing);
         gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
         gridLayout.constraintCount = cols;
-        gridLayout.childAlignment = TextAnchor.UpperLeft;
+        gridLayout.childAlignment = TextAnchor.MiddleCenter;
     }
 
     void GenerateGrid()
