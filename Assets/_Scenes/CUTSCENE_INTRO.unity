@@ -814,9 +814,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   videoPlayer: {fileID: 445090781}
-  nomeDaProximaCena: GAME 1
+  nomeDaProximaCena: MAPA_FIXO
   velocidadeDoTexto: 0.2
   telaDeLoading: {fileID: 508248052}
+  canvasGroupLoading: {fileID: 0}
   textoPorcentagem: {fileID: 884864779}
 --- !u!4 &1348493602
 Transform:
