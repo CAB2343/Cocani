@@ -2,23 +2,13 @@ using UnityEngine;
 
 public class PlayerRayCast : MonoBehaviour
 {
-    [Header("Raycast Settings")]
+    [Header("Configurações")]
     public float distanciaDoRaio = 5f;
     public float alturaDoRaio = 0.80f;
     public KeyCode interactKey = KeyCode.F;
-    
-    // Nome da Tag que você deve colocar no objeto na Unity
     public string tagInteracao = "Interactable"; 
 
-    [Header("UI")]
-    public GameObject promptUI; 
-
-    private IInteractable objetoAtual; // Agora é genérico
-
-    void Start()
-    {
-        if (promptUI != null) promptUI.SetActive(false);
-    }
+    private RestPoint ultimoPontoDescanso; // Memoriza a cadeira para desligar o texto depois
 
     void Update()
     {
@@ -26,33 +16,42 @@ public class PlayerRayCast : MonoBehaviour
         Ray ray = new Ray(origem, transform.forward);
         RaycastHit hit;
 
-        Debug.DrawRay(origem, transform.forward * distanciaDoRaio, Color.red);
+        bool encontrouRestPoint = false;
 
         if (Physics.Raycast(ray, out hit, distanciaDoRaio))
         {
-            // 1. Verifica se a TAG está correta
             if (hit.collider.CompareTag(tagInteracao))
             {
-                // 2. Tenta pegar qualquer script que tenha a interface IInteractable
+                // 1. Lógica de Interação (Funciona para tudo que for interagível)
                 IInteractable interactable = hit.collider.GetComponent<IInteractable>();
-
-                if (interactable != null)
+                if (interactable != null && Input.GetKeyDown(interactKey))
                 {
-                    if (promptUI != null && objetoAtual != interactable)
-                        promptUI.SetActive(true);
+                    interactable.Interact();
+                }
 
-                    objetoAtual = interactable;
-
-                    if (Input.GetKeyDown(interactKey))
+                // 2. Lógica Visual Específica (Só para o RestPoint)
+                RestPoint pontoAtual = hit.collider.GetComponent<RestPoint>();
+                
+                if (pontoAtual != null)
+                {
+                    encontrouRestPoint = true;
+                    
+                    // Se mudou de objeto ou começou a olhar agora
+                    if (ultimoPontoDescanso != pontoAtual)
                     {
-                        interactable.Interact();
+                        if (ultimoPontoDescanso != null) ultimoPontoDescanso.ToggleTexto(false);
+                        pontoAtual.ToggleTexto(true);
+                        ultimoPontoDescanso = pontoAtual;
                     }
-                    return;
                 }
             }
         }
 
-        if (promptUI != null) promptUI.SetActive(false);
-        objetoAtual = null;
+        // Se parou de olhar para um RestPoint, desliga o texto dele
+        if (!encontrouRestPoint && ultimoPontoDescanso != null)
+        {
+            ultimoPontoDescanso.ToggleTexto(false);
+            ultimoPontoDescanso = null;
+        }
     }
 }

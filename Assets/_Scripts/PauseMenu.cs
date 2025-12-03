@@ -7,12 +7,15 @@ public class PauseMenu : MonoBehaviour
 {
     public static bool GameIsPaused = false;
     public GameObject pauseMenuUI;
+    public PauseFade animacaoMenu;
+    
+    [Header("UI do Jogo")] // Organizador no Inspector
+    public GameObject gpsCanvasUI; // <--- ADICIONADO: Arraste o GPSCanvas aqui
 
-    private GameManager gameManager; // referência opcional para integrar com o GameManager
+    private GameManager gameManager;
 
     void Start()
     {
-        // Tenta achar automaticamente o GameManager na cena
         gameManager = FindObjectOfType<GameManager>();
 
         if (pauseMenuUI != null)
@@ -34,21 +37,34 @@ public class PauseMenu : MonoBehaviour
     public void Resume()
     {
         Debug.Log("[PauseMenu] Resumindo o jogo...");
-        pauseMenuUI.SetActive(false);
-        Time.timeScale = 1f;
-        GameIsPaused = false;
+        
+        // Chama o fade out e espera terminar
+        animacaoMenu.EsconderMenu(() => 
+        {
+            pauseMenuUI.SetActive(false);
+            
+            // Reativa o GPS quando o menu terminar de sumir
+            if (gpsCanvasUI != null) gpsCanvasUI.SetActive(true); // <--- ADICIONADO
 
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+            Time.timeScale = 1f;
+            GameIsPaused = false;
 
-        // Retoma o GameManager se existir
-        if (gameManager != null)
-            gameManager.UnpauseGame();
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+
+            if (gameManager != null)
+                gameManager.UnpauseGame();
+        });
     }
 
     public void Pause()
     {
         Debug.Log("[PauseMenu] Pausando o jogo...");
+        
+        // Esconde o GPS imediatamente ao pausar
+        if (gpsCanvasUI != null) gpsCanvasUI.SetActive(false); // <--- ADICIONADO
+
+        animacaoMenu.MostrarMenu();
         pauseMenuUI.SetActive(true);
         Time.timeScale = 0f;
         GameIsPaused = true;
@@ -56,7 +72,6 @@ public class PauseMenu : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        // Pausa o GameManager se existir
         if (gameManager != null)
             gameManager.PauseGame();
     }
@@ -74,7 +89,7 @@ public class PauseMenu : MonoBehaviour
         Debug.Log("[PauseMenu] Carregando menu...");
         Time.timeScale = 1f;
         GameIsPaused = false;
-        SceneManager.LoadScene("Menu"); // Altere para o nome correto da cena do menu
+        SceneManager.LoadScene("MenuPrincipal"); 
     }
 
     public void QuitGame()

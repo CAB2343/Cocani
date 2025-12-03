@@ -1192,6 +1192,7 @@ GameObject:
   - component: {fileID: 1030532860}
   - component: {fileID: 1030532862}
   - component: {fileID: 1030532863}
+  - component: {fileID: 1030532864}
   m_Layer: 5
   m_Name: sair
   m_TagString: Untagged
@@ -1394,6 +1395,19 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
+--- !u!114 &1030532864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1030532858}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1275170ad956c5479ac1bc924d45abc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  corDestaque: {r: 0.5686275, g: 0.29803923, b: 0.3019608, a: 1}
 --- !u!1 &1112151048
 GameObject:
   m_ObjectHideFlags: 0
@@ -1808,6 +1822,7 @@ GameObject:
   - component: {fileID: 1431863595}
   - component: {fileID: 1431863597}
   - component: {fileID: 1431863598}
+  - component: {fileID: 1431863599}
   m_Layer: 5
   m_Name: jogar
   m_TagString: Untagged
@@ -2008,6 +2023,19 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
+--- !u!114 &1431863599
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1431863593}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1275170ad956c5479ac1bc924d45abc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  corDestaque: {r: 0.5686275, g: 0.29803923, b: 0.3019608, a: 1}
 --- !u!1 &1446842981
 GameObject:
   m_ObjectHideFlags: 0
@@ -2436,6 +2464,7 @@ GameObject:
   - component: {fileID: 1733317524}
   - component: {fileID: 1733317526}
   - component: {fileID: 1733317527}
+  - component: {fileID: 1733317528}
   m_Layer: 5
   m_Name: "op\xE7\xF5es"
   m_TagString: Untagged
@@ -2636,6 +2665,19 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
+--- !u!114 &1733317528
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1733317522}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1275170ad956c5479ac1bc924d45abc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  corDestaque: {r: 0.5686275, g: 0.29803923, b: 0.3019608, a: 1}
 --- !u!1 &1864016645
 GameObject:
   m_ObjectHideFlags: 0

@@ -15,15 +15,15 @@ public class VisorController : MonoBehaviour
 
     void Update()
     {
-        if(Input.GetKeyDown(KeyCode.V) && panelVisor.activeSelf == false)
+        // Detecta quando a tecla V é pressionada (início)
+        if (Input.GetKeyDown(KeyCode.V))
         {
             panelVisor.SetActive(true);
         }
-        else if(Input.GetKeyDown(KeyCode.V) && panelVisor.activeSelf == true)
+        // Detecta quando a tecla V é solta (fim)
+        else if (Input.GetKeyUp(KeyCode.V))
         {
             panelVisor.SetActive(false);
         }
-
-
     }
 }
